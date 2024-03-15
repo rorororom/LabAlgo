@@ -1,7 +1,7 @@
 CC = gcc
 
 ## SOURCES = main.c mainArray.c stackArray.c ../log.c
-SOURCES = main.c mainArrayVoid.c stackArrayVoid.c ../log.c
+SOURCES = main.c mainArray.c stackArray.c ../log.c
 OBJECTS = $(SOURCES:%.c=$(OBJ_DIR)/%.o)
 EXECUTABLE = main.out
 

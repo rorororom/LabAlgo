@@ -14,6 +14,11 @@ make
 make run
 ```
 
+Если хотите изменить выполнение команды для void* (в репозитории по умолчанию лежит int), то заменить в Makefile SOURCES на
+```
+SOURCES = main.c mainArrayVoid.c stackArrayVoid.c ../log.c
+```
+
 ### Введение
 Я сначала сделала массивы на
 ```
