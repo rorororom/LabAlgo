@@ -38,6 +38,7 @@ int Push(struct Stack* stack, Elem_t value) {
     }
 
     stack->data[stack->size++] = value;
+    //printf("%d ", stack->data[stack->size - 1] );
     return 1;
 }
 

@@ -9,7 +9,6 @@
 
 const int value = 5;
 
-
 void Test1() {
     clock_t start_time, end_time;
     double cpu_time_used = 0;

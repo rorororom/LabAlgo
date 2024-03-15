@@ -7,7 +7,7 @@
 #include "mainArray.h"
 #include "../log.h"
 
-const int value           = 5;
+const char value          = 'a';
 const size_t sizeForStack = 1e2;
 const size_t elementSize  = 1;
 

@@ -7,7 +7,7 @@
 #include "mainArray.h"
 #include "../log.h"
 
-const char value           = 'a';
+const int value           = 10;
 const size_t sizeForStack = 1e2;
 
 void Test1() {
