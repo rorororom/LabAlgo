@@ -5,24 +5,29 @@
 
 #include "stackListVoid.h"
 
+#define RIGHT 1
+#define ERROR 0
+
 struct Stack* Stack_ctr(size_t size, size_t element_size) {
     struct Stack* stack = (struct Stack*)calloc(1, sizeof(struct Stack));
     assert(stack);
 
     stack->top = NULL;
-    stack->size = 0;
+    stack->size = ERROR;
     return stack;
 }
 
-int Push(struct Stack* stack, void* buffer) {
+int Push(struct Stack* stack, void* buffer, size_t size) {
     assert(stack);
     assert(buffer);
-    struct Node* new_elem = (struct Node*)calloc(1, sizeof(struct Node));
 
-    void* new = calloc(1, sizeof(*buffer));
+    struct Node* new_elem = (struct Node*)calloc(1, sizeof(struct Node));
+    assert(new_elem);
+
+    void* new = calloc(1, sizeof(size));
     assert(new);
 
-    void* newNode = memcpy(new, buffer, sizeof(*buffer));
+    void* newNode = memcpy(new, buffer, sizeof(size));
     assert(newNode);
 
     new_elem->data = newNode;
@@ -31,28 +36,28 @@ int Push(struct Stack* stack, void* buffer) {
     stack->top = new_elem;
     stack->size++;
 
-    return 1;
+    return RIGHT;
 }
 
-int Top(struct Stack* stack, Elem_t* buffer) {
+int TopStack(struct Stack* stack, Elem_t* buffer) {
     assert(stack);
     assert(buffer);
 
     if (stack->top == NULL) {
-        abort();
+        return ERROR;
     }
 
     void* data = stack->top->data;
 
     memcpy(buffer, data, sizeof(data));
 
-    return 0;
+    return RIGHT;
 }
 
 int Pop(struct Stack* stack) {
     assert(stack);
     if (stack->top == NULL) {
-        return 0;
+        return ERROR;
     }
 
     struct Node* temp = stack->top->prev;
@@ -62,7 +67,7 @@ int Pop(struct Stack* stack) {
     stack->top = temp;
     stack->size--;
 
-    return 1;
+    return RIGHT;
 }
 
 struct Stack* Stack_dtr(struct Stack* stack) {

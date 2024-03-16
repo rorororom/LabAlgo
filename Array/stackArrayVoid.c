@@ -5,8 +5,10 @@
 
 #include "stackArrayVoid.h"
 
-const float  UP_KOEF   = 2;
-const float  DOWN_KOEF = 0.5;
+#define RIGHT 1
+#define ERROR 0
+
+const float  UP_COEFF = 2;
 
 struct Stack* Stack_ctr(size_t size, size_t element_size) {
     struct Stack* stack = (struct Stack*) calloc(1, sizeof(struct Stack));
@@ -22,63 +24,70 @@ struct Stack* Stack_ctr(size_t size, size_t element_size) {
     return stack;
 }
 
-int Push(struct Stack* stack, void* buffer) {
+int Push(struct Stack* stack, void* buffer, size_t size) {
     assert(stack);
     assert(buffer);
 
     if (stack->size >= stack->capacity) {
-        float koef_capacity = UP_KOEF;
-        StackRealloc(stack, koef_capacity);
+        StackRealloc(stack, stack->capacity * UP_COEFF);
     }
 
     if (stack == NULL || stack->data == NULL) {
-        return 0;
+        return ERROR;
     }
     if (stack->size   >= stack->capacity) {
-        return 0;
+        return ERROR;
     }
 
-    void* data = calloc(1, sizeof(*buffer));
-    data = memcpy(data, buffer, sizeof(*buffer));
+    void* data = calloc(1, sizeof(size));
+    assert(data);
+    data = memcpy(data, buffer, sizeof(size));
     assert(data);
 
     stack->data[stack->size] = data;
     stack->size++;
-    return 1;
+    return RIGHT;
 }
 
-void Top(struct Stack* stack, void* buffer) {
+int TopStack(struct Stack* stack, void* buffer) {
     assert(stack);
     assert(buffer);
 
     void* value = stack->data[stack->size - 1];
 
-    memcpy(buffer, value, sizeof(value));
+    if (stack->size == 0) {
+        return ERROR;
+    } else {
+        void* value = stack->data[stack->size - 1];
+        memcpy(buffer, value, sizeof(value));
+    }
+
 }
 
 int Pop(struct Stack* stack) {
     assert(stack);
 
-    if (stack->size < (stack->capacity) / UP_KOEF) {
-        float koef_capacity = DOWN_KOEF;
-        StackRealloc(stack, koef_capacity);
-    }
-
     if (stack->size == 0) {
-        return 0;
+        return ERROR;
     } else {
         void* elem = stack->data[--(stack->size)];
         free(elem);
         stack->data[stack->size] = NULL;
-        return 1;
+        return RIGHT;
     }
 
-    return 0;
+    return ERROR;
 }
 
-static void StackRealloc(struct Stack *stack, float koef_capacity) {
+static void StackRealloc(struct Stack *stack, size_t new_capacity) {
     assert(stack);
-    stack->capacity *= koef_capacity;
+
+    if (new_capacity == 0) {
+        stack->capacity = 1;
+    }
+    else {
+        stack->capacity = new_capacity;
+    }
 
     void** data      = stack->data;
     void** temp      = (void**)realloc(data, stack->capacity * sizeof(void*));

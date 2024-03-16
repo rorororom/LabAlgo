@@ -1,7 +1,11 @@
+#include <assert.h>
 #include <stdio.h>
 #include <stdlib.h>
 
 #include "stackList.h"
+
+#define RIGHT 1
+#define ERROR 0
 
 struct Stack* Stack_ctr() {
     struct Stack* stack = (struct Stack*)malloc(sizeof(struct Stack));
@@ -15,10 +19,10 @@ struct Stack* Stack_ctr() {
 
 int Push(struct Stack* stack, Elem_t value) {
     assert(stack);
-    
+
     struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
     if (newNode == NULL) {
-        return 0;
+        return ERROR;
     }
 
     newNode->data = value;
@@ -26,14 +30,14 @@ int Push(struct Stack* stack, Elem_t value) {
     stack->top = newNode;
     stack->size++;
 
-    return 1;
+    return RIGHT;
 }
 
-Elem_t Top(struct Stack* stack) {
+Elem_t TopStack(struct Stack* stack) {
     assert(stack);
 
     if (stack->top == NULL) {
-        return 0;
+        return ERROR;
     }
 
     return stack->top->data;
@@ -46,6 +50,8 @@ int Pop(struct Stack* stack) {
         return 0;
     }
     if (stack->size == 1) {
+        struct Node* temp = stack->top;
+        free(temp);
         stack->top = NULL;
     } else {
         struct Node* temp = stack->top;
@@ -53,7 +59,7 @@ int Pop(struct Stack* stack) {
         free(temp);
         stack->size--;
     }
-    return 1;
+    return RIGHT;
 }
 
 struct Stack* Stack_dtr(struct Stack* stack) {

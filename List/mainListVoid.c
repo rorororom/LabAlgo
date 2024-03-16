@@ -7,7 +7,10 @@
 #include "../log.h"
 #include "mainList.h"
 
-const int value = 5;
+#define ERROR 0
+
+const char   VALUE             = 'a';
+const size_t FILE_WRITE_SIZE = 1000;
 
 void Test1() {
     clock_t start_time, end_time;
@@ -22,21 +25,21 @@ void Test1() {
     start_time = clock();
     while (cntC >= 1e5) {
         for (int i = 0; i < cntC; i++) {
-            ans = Push(stack, &value);
-            if (ans == 0)
+            ans = Push(stack, &VALUE, sizeof(VALUE));
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "не удалось запушить элемент\n");
         }
         cntC /= 2;
         for(int i = 0; i < cntC; i++) {
             ans = Pop(stack);
-            if (ans == 0)
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "не удалось удалить элемент\n");
         }
 
         cntC += cntC / 2;
         for(int i = 0; i < cntC; i++) {
-            ans = Push(stack, &value);
-            if (ans == 0)
+            ans = Push(stack, &VALUE, sizeof(VALUE));
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "не удалось запушить элемент\n");
         }
     }
@@ -47,11 +50,6 @@ void Test1() {
 
     Stack_dtr(stack);
 }
-
-//Первый запуск: 0.993428 секунд
-//Второй запуск: 0.993646 секунд
-//Третий запуск: 1.002531 секунд
-//Среднее время: 0.996535 секунд
 
 void Test2() {
     clock_t start_time, end_time;
@@ -64,23 +62,23 @@ void Test2() {
     int ans = 0;
 
     for (size_t i = 0; i < 1e6; i++) {
-        ans = Push(stack, &value);
-        if (ans == 0)
+         ans = Push(stack, &VALUE, sizeof(VALUE));
+        if (ans == ERROR)
             fprintf(LOG_FILE, "не удалось запушить элемент\n");
     }
 
     for (size_t i = 0; i < 100; i++) {
         for (size_t j = 0; j < 1e4; j++) {
             ans = Pop(stack);
-            if (ans == 0)
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "не удалось удалить элемент\n");
         }
     }
 
     for (size_t i = 0; i < 100; i++) {
         for (size_t j = 0; j < 1e4; j++) {
-            ans = Push(stack, &value);
-            if (ans == 0)
+             ans = Push(stack, &VALUE, sizeof(VALUE));
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "не удалось запушить элемент\n");
         }
     }
@@ -88,21 +86,21 @@ void Test2() {
     int cntC = 1e6;
     while (cntC >= 1e5) {
         for (int i = 0; i < cntC; i++) {
-            ans = Push(stack, &value);
-            if (ans == 0)
+             ans = Push(stack, &VALUE, sizeof(VALUE));
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "не удалось запушить элемент\n");
         }
         cntC /= 2;
         for(int i = 0; i < cntC; i++) {
             ans = Pop(stack);
-            if (ans == 0)
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "не удалось удалить элемент\n");
         }
 
         cntC += cntC / 2;
         for(int i = 0; i < cntC; i++) {
-            ans = Push(stack, &value);
-            if (ans == 0)
+             ans = Push(stack, &VALUE, sizeof(VALUE));
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "не удалось запушить элемент\n");
         }
     }
@@ -110,15 +108,15 @@ void Test2() {
     for (size_t i = 0; i < 100; i++) {
         for (size_t j = 0; j < 1e4; j++) {
             ans = Pop(stack);
-            if (ans == 0)
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "не удалось удалить элемент\n");
         }
     }
 
     for (size_t i = 0; i < 100; i++) {
         for (size_t j = 0; j < 1e4; j++) {
-            ans = Push(stack, &value);
-            if (ans == 0)
+             ans = Push(stack, &VALUE, sizeof(VALUE));
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "не удалось запушить элемент\n");
         }
     }
@@ -130,11 +128,6 @@ void Test2() {
     Stack_dtr(stack);
 }
 
-//Первый запуск: 1.575273 секунд
-//Второй запуск: 1.673301 секунд
-//Третий запуск: 1.610580 секунд
-//Среднее время: 1.619718 секунд
-
 void Test3() {
     clock_t start_time, end_time;
     double cpu_time_used = 0;
@@ -144,24 +137,24 @@ void Test3() {
     assert(stack);
 
     for (size_t i = 0; i < 1e6; i++) {
-        ans = Push(stack, &value);
-        if (ans == 0)
+         ans = Push(stack, &VALUE, sizeof(VALUE));
+        if (ans == ERROR)
                 fprintf(LOG_FILE, "не удалось запушить элемент\n");
     }
 
-    srand(time(NULL)); // Инициализация генератора псевдослучайных чисел
+    srand(time(NULL));
 
     start_time = clock();
     for (size_t i = 0; i < 1e6; i++) {
         int randomNumber = rand() % 2 + 1;
         if (randomNumber == 1) {
-            ans = Push(stack, &value);
-            if (ans == 0)
+             ans = Push(stack, &VALUE, sizeof(VALUE));
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "не удалось запушить элемент\n");
         }
         else {
             ans = Pop(stack);
-            if (ans == 0)
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "не удалось удалить элемент\n");
         }
     }
@@ -172,12 +165,6 @@ void Test3() {
 
     Stack_dtr(stack);
 }
-
-//Первый запуск: 0.140369 секунд
-//Второй запуск: 0.142735 секунд
-//Третий запуск: 0.135011 секунд
-//Среднее время: 0.139372 секунд
-
 
 void Test4() {
     clock_t start_time, end_time;
@@ -196,10 +183,10 @@ void Test4() {
     int ans = 0;
     start_time = clock();
     for (size_t i = 1; i < 1e6 + 1; i++) {
-        ans = Push(stack, &value);
-        if (ans == 0)
+         ans = Push(stack, &VALUE, sizeof(VALUE));
+        if (ans == ERROR)
             fprintf(LOG_FILE, "не запушилось в стек\n");
-        if (i % 1000 == 0) {
+        if (i % FILE_WRITE_SIZE == 0) {
             end_time = clock();
             cpu_time_used = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
             fprintf(file, "%zu %f\n", i, cpu_time_used * 1000);

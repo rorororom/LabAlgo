@@ -11,12 +11,12 @@ struct Stack{
     float  capacity;
 };
 
-int    Pop (struct Stack* stack);
-int    Push(struct Stack* stack, Elem_t value);
-Elem_t Top (struct Stack* stack);
+int    Pop     (struct Stack* stack);
+int    Push    (struct Stack* stack, Elem_t value);
+Elem_t TopStack(struct Stack* stack);
 
 struct Stack* Stack_ctr   (size_t size);
 struct Stack* Stack_dtr   (struct Stack* stack);
-static void   StackRealloc(struct Stack *stack, float koef_capacity);
+static void   StackRealloc(struct Stack *stack, size_t new_capacity);
 
 #endif

@@ -15,9 +15,9 @@ struct Stack{
     size_t size;
 };
 
-void Top (struct Stack* stack, Elem_t* buffer);
-int  Pop (struct Stack* stack);
-int  Push(struct Stack* stack, Elem_t value);
+Elem_t TopStack(struct Stack* stack);
+int    Pop     (struct Stack* stack);
+int    Push    (Stack* stack, Elem_t value);
 
 struct Stack* Stack_ctr();
 struct Stack* Stack_dtr(struct Stack* stack);

@@ -1,10 +1,12 @@
 import matplotlib.pyplot as plt
 
-with open('dataForGraphA.txt', 'r') as file1:
-    data1 = [float(line.split()[1]) for line in file1]
+def get_data_array_from_file(filename):
+    with open(filename, 'r') as file:
+        data = [float(line.split()[1]) for line in file]
+    return data
 
-with open('dataForGraphL.txt', 'r') as file2:
-    data2 = [float(line.split()[1]) for line in file2]
+data1 = get_data_array_from_file('dataForGraphA.txt')
+data2 = get_data_array_from_file('dataForGraphL.txt')
 
 x = list(range(len(data1)))
 

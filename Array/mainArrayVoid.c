@@ -7,9 +7,12 @@
 #include "mainArray.h"
 #include "../log.h"
 
-const char value          = 'a';
-const size_t sizeForStack = 1e2;
-const size_t elementSize  = 1;
+#define ERROR 0
+
+const char   VALUE           = 'a';
+const size_t SIZE_FOR_STACK  = 1e2;
+const size_t FILE_WRITE_SIZE = 1000;
+const size_t ELEMENT_SIZE    = 1;
 
 void Test1() {
     clock_t start_time, end_time;
@@ -18,27 +21,27 @@ void Test1() {
     int cntC = 1e6;
     int ans = 0;
 
-    struct Stack* stack = Stack_ctr(sizeForStack, elementSize);
+    struct Stack* stack = Stack_ctr(SIZE_FOR_STACK, ELEMENT_SIZE);
     assert(stack);
 
     start_time = clock();
     while (cntC >= 1e5) {
         for (int i = 0; i < cntC; i++) {
-            ans = Push(stack, &value);
-            if (ans == 0)
+             ans = Push(stack, &VALUE, sizeof(VALUE));
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "элемент не был добавлен\n");
         }
         cntC /= 2;
         for(int i = 0; i < cntC; i++) {
             int ans = Pop(stack);
-            if (ans == 0)
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "элемент не был удален\n");
         }
 
         cntC += cntC / 2;
         for(int i = 0; i < cntC; i++) {
-            ans = Push(stack, &value);
-            if (ans == 0)
+             ans = Push(stack, &VALUE, sizeof(VALUE));
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "элемент не был добавлен\n");
         }
     }
@@ -50,38 +53,33 @@ void Test1() {
     Stack_dtr(stack);
 }
 
-//Первый запуск: 0.602659 секунд
-//Второй запуск: 0.615313 секунд
-//Третий запуск: 0.583139 секунд
-//Среднее время: 0.600371 секунд
-
 void Test2() {
     clock_t start_time, end_time;
     double cpu_time_used = 0;
     int ans = 0;
 
-    struct Stack* stack = Stack_ctr(sizeForStack, elementSize);
+    struct Stack* stack = Stack_ctr(SIZE_FOR_STACK, ELEMENT_SIZE);
     assert(stack);
     start_time = clock();
 
     for (size_t i = 0; i < 1e6; i++) {
-        ans = Push(stack, &value);
-        if (ans == 0)
+         ans = Push(stack, &VALUE, sizeof(VALUE));
+        if (ans == ERROR)
             fprintf(LOG_FILE, "элемент не был добавлен\n");
     }
 
     for (size_t i = 0; i < 10; i++) {
         for (size_t j = 0; j < 1; j++) {
             ans = Pop(stack);
-            if (ans == 0)
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "элемент не был удален\n");
         }
     }
 
     for (size_t i = 0; i < 100; i++) {
         for (size_t j = 0; j < 1e4; j++) {
-            ans = Push(stack, &value);
-            if (ans == 0)
+             ans = Push(stack, &VALUE, sizeof(VALUE));
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "элемент не был добавлен\n");
         }
     }
@@ -89,21 +87,21 @@ void Test2() {
     int cntC = 1e6;
     while (cntC >= 1e5) {
         for (int i = 0; i < cntC; i++) {
-            ans = Push(stack, &value);
-            if (ans == 0)
+             ans = Push(stack, &VALUE, sizeof(VALUE));
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "элемент не был добавлен\n");
         }
         cntC /= 2;
         for(int i = 0; i < cntC; i++) {
             ans = Pop(stack);
-            if (ans == 0)
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "элемент не был удален\n");
         }
 
         cntC += cntC / 2;
         for(int i = 0; i < cntC; i++) {
-            ans = Push(stack, &value);
-            if (ans == 0)
+             ans = Push(stack, &VALUE, sizeof(VALUE));
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "элемент не был добавлен\n");
         }
     }
@@ -111,15 +109,15 @@ void Test2() {
     for (size_t i = 0; i < 100; i++) {
         for (size_t j = 0; j < 1e4; j++) {
             ans = Pop(stack);
-            if (ans == 0)
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "элемент не был удален\n");
         }
     }
 
     for (size_t i = 0; i < 100; i++) {
         for (size_t j = 0; j < 1e4; j++) {
-            ans = Push(stack, &value);
-            if (ans == 0)
+             ans = Push(stack, &VALUE, sizeof(VALUE));
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "элемент не был добавлен\n");
         }
     }
@@ -131,22 +129,17 @@ void Test2() {
     Stack_dtr(stack);
 }
 
-//Первый запуск: 0.927480 секунд
-//Второй запуск: 0.860991 секунд
-//Третий запуск: 0.847015 секунд
-//Среднее время: 0.878495 секунд
-
 void Test3() {
     clock_t start_time, end_time;
     double cpu_time_used = 0;
     int ans = 0;
 
-    struct Stack* stack = Stack_ctr(sizeForStack, elementSize);
+    struct Stack* stack = Stack_ctr(SIZE_FOR_STACK, ELEMENT_SIZE);
     assert(stack);
 
     for (size_t i = 0; i < 1e6; i++) {
-        ans = Push(stack, &value);
-            if (ans == 0)
+         ans = Push(stack, &VALUE, sizeof(VALUE));
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "элемент не был добавлен\n");
     }
 
@@ -156,13 +149,13 @@ void Test3() {
     for (size_t i = 0; i < 1e6; i++) {
         int randomNumber = rand() % 2 + 1;
         if (randomNumber == 1) {
-            ans = Push(stack, &value);
-            if (ans == 0)
+             ans = Push(stack, &VALUE, sizeof(VALUE));
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "элемент не был добавлен\n");
         }
         else {
             ans = Pop(stack);
-            if (ans == 0)
+            if (ans == ERROR)
                 fprintf(LOG_FILE, "элемент не был удален\n");
         }
     }
@@ -174,11 +167,6 @@ void Test3() {
     Stack_dtr(stack);
 }
 
-//Первый запуск: 0.078136 секунд
-//Второй запуск: 0.068447 секунд
-//Третий запуск: 0.070860 секунд
-//Среднее время: 0.072481 секунд
-
 void Test4() {
     clock_t start_time, end_time;
     double cpu_time_used = 0;
@@ -189,17 +177,17 @@ void Test4() {
     if (file == NULL)
         printf("Ошибка открытия файла.\n");
 
-    struct Stack* stack = Stack_ctr(sizeForStack, elementSize);
+    struct Stack* stack = Stack_ctr(SIZE_FOR_STACK, ELEMENT_SIZE);
     assert(stack);
 
     int ans = 0;
     start_time = clock();
     for (size_t i = 1; i < 1e6 + 1; i++) {
-        ans = Push(stack, &value);
-        if (ans == 0)
+         ans = Push(stack, &VALUE, sizeof(VALUE));
+        if (ans == ERROR)
             fprintf(LOG_FILE, "не запушился элемент\n");
 
-        if (i % 1000 == 0) {
+        if (i % FILE_WRITE_SIZE == 0) {
             end_time = clock();
             cpu_time_used = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
             fprintf(file, "%zu %f\n", i, 1000 * cpu_time_used );
