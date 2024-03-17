@@ -67,6 +67,10 @@ int TopStack(struct Stack* stack, void* buffer) {
 int Pop(struct Stack* stack) {
     assert(stack);
 
+    if (stack->size <= stack->capacity / (UP_COEFF * UP_COEFF)) {
+        StackRealloc(stack, stack->capacity / (UP_COEFF * UP_COEFF));
+    }
+
     if (stack->size == 0) {
         return ERROR;
     } else {

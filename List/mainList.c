@@ -12,6 +12,7 @@
 
 const int    VALUE              = 5;
 const size_t FILE_WRITE_SIZE = 1000;
+const size_t MILLISECONDS    = 1000;
 
 void Test1() {
     clock_t start_time, end_time;
@@ -190,7 +191,7 @@ void Test4() {
         if (i % FILE_WRITE_SIZE == 0) {
             end_time = clock();
             cpu_time_used = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
-            fprintf(file, "%zu %f\n", i, cpu_time_used * 1000);
+            fprintf(file, "%zu %f\n", i, cpu_time_used * MILLISECONDS);
         }
     }
 
