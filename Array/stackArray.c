@@ -56,6 +56,10 @@ Elem_t TopStack(struct Stack* stack) {
 int Pop(struct Stack* stack) {
     assert(stack);
 
+    if (stack->size <= stack->capacity / (UP_COEFF * UP_COEFF)) {
+        StackRealloc(stack, stack->capacity / (UP_COEFF * UP_COEFF));
+    }
+
     if (stack->size > 0) {
         stack->data[stack->size - 1] = 0;
         stack->size--;
