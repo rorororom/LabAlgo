@@ -10,7 +10,7 @@
 
 const float  UP_COEFF = 2;
 
-struct Stack* Stack_ctr(size_t size, size_t element_size) {
+struct Stack* StackCtr(size_t size, size_t element_size) {
     struct Stack* stack = (struct Stack*) calloc(1, sizeof(struct Stack));
     assert(stack);
 
@@ -24,7 +24,7 @@ struct Stack* Stack_ctr(size_t size, size_t element_size) {
     return stack;
 }
 
-int Push(struct Stack* stack, void* buffer, size_t size) {
+Status_t PushStack(struct Stack* stack, void* buffer, size_t size) {
     assert(stack);
     assert(buffer);
 
@@ -49,7 +49,7 @@ int Push(struct Stack* stack, void* buffer, size_t size) {
     return RIGHT;
 }
 
-int TopStack(struct Stack* stack, void* buffer) {
+Status_t TopStack(struct Stack* stack, void* buffer) {
     assert(stack);
     assert(buffer);
 
@@ -60,11 +60,12 @@ int TopStack(struct Stack* stack, void* buffer) {
     } else {
         void* value = stack->data[stack->size - 1];
         memcpy(buffer, value, sizeof(value));
+        return RIGHT;
     }
 
 }
 
-int Pop(struct Stack* stack) {
+Status_t PopStack(struct Stack* stack) {
     assert(stack);
 
     if (stack->size <= stack->capacity / (UP_COEFF * UP_COEFF)) {
@@ -87,21 +88,20 @@ static void StackRealloc(struct Stack *stack, size_t new_capacity) {
     assert(stack);
 
     if (new_capacity == 0) {
-        stack->capacity = 1;
+        new_capacity = 1;
     }
-    else {
+
+    void** temp = (void**)realloc(stack->data, new_capacity * sizeof(void*));
+
+    if (temp != NULL) {
+        stack->data = temp;
         stack->capacity = new_capacity;
+    } else {
+        fprintf(stderr, "Не удалось выделить память\n");
     }
-
-    void** data      = stack->data;
-    void** temp      = (void**)realloc(data, stack->capacity * sizeof(void*));
-
-    assert(temp);
-
-    stack->data = temp;
 }
 
-struct Stack* Stack_dtr(struct Stack* stack) {
+struct Stack* StackDtr(struct Stack* stack) {
     assert(stack);
 
     for (int i = 0; i < stack->size; i++) {

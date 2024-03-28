@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 typedef int Elem_t;
+typedef int Status_t;
 
 struct Stack{
     void** data;
@@ -11,12 +12,12 @@ struct Stack{
     float  capacity;
 };
 
-int  Pop     (struct Stack* stack);
-int  Push    (struct Stack* stack, void* buffer, size_t size);
-int  TopStack(struct Stack* stack, void* buffer);
+Status_t PopStack     (struct Stack* stack);
+Status_t PushStack    (struct Stack* stack, void* buffer, size_t size);
+Status_t TopStack(struct Stack* stack, void* buffer);
 
-struct Stack* Stack_ctr   (size_t size, size_t element_size);
-struct Stack* Stack_dtr   (struct Stack* stack);
+struct Stack* StackCtr   (size_t size, size_t element_size);
+struct Stack* StackDtr   (struct Stack* stack);
 static void   StackRealloc(struct Stack *stack, size_t new_capacity);
 
 #endif

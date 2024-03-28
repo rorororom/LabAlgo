@@ -7,7 +7,7 @@
 #define RIGHT 1
 #define ERROR 0
 
-struct Stack* Stack_ctr() {
+struct Stack* StackCtr() {
     struct Stack* stack = (struct Stack*)malloc(sizeof(struct Stack));
     if (stack == NULL) {
         return NULL;
@@ -17,7 +17,7 @@ struct Stack* Stack_ctr() {
     return stack;
 }
 
-int Push(struct Stack* stack, Elem_t value) {
+Status_t PushStack(struct Stack* stack, Elem_t value) {
     assert(stack);
 
     struct Node* newNode = (struct Node*)malloc(sizeof(struct Node));
@@ -33,17 +33,19 @@ int Push(struct Stack* stack, Elem_t value) {
     return RIGHT;
 }
 
-Elem_t TopStack(struct Stack* stack) {
+Status_t StackTop(struct Stack* stack, Elem_t* buffer) {
     assert(stack);
 
     if (stack->top == NULL) {
+        *buffer = ERROR;
         return ERROR;
     }
 
-    return stack->top->data;
+    *buffer = stack->top->data;
+    return RIGHT;
 }
 
-int Pop(struct Stack* stack) {
+Status_t PopStack(struct Stack* stack) {
     assert(stack);
 
     if (stack->top == NULL) {
@@ -62,10 +64,10 @@ int Pop(struct Stack* stack) {
     return RIGHT;
 }
 
-struct Stack* Stack_dtr(struct Stack* stack) {
+struct Stack* StackDtr(struct Stack* stack) {
     assert(stack);
     while (stack->top != NULL) {
-        Pop(stack);
+        PopStack(stack);
     }
     free(stack);
     return NULL;

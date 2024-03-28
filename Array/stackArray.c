@@ -9,7 +9,7 @@
 
 const float  UP_COEFF = 2;
 
-struct Stack* Stack_ctr(size_t size) {
+struct Stack* StackCtr(size_t size) {
     struct Stack* stack = (struct Stack*)malloc(sizeof(struct Stack));
     if (stack == NULL) {
         return NULL;
@@ -27,7 +27,7 @@ struct Stack* Stack_ctr(size_t size) {
     return stack;
 }
 
-int Push(struct Stack* stack, Elem_t value) {
+Status_t PushStack(struct Stack* stack, Elem_t value) {
     assert(stack);
     if (stack->size >= stack->capacity) {
         StackRealloc(stack, stack->capacity * UP_COEFF);
@@ -44,16 +44,18 @@ int Push(struct Stack* stack, Elem_t value) {
     return RIGHT;
 }
 
-Elem_t TopStack(struct Stack* stack) {
+Status_t TopStack(struct Stack* stack, Elem_t* buffer) {
     assert(stack);
 
-    if (stack->size == 0)
+    if (stack->size == 0) {
         return ERROR;
-    else
-        return stack->data[stack->size - 1];
+    } else {
+        *buffer = stack->data[stack->size - 1];
+        return RIGHT;
+    }
 }
 
-int Pop(struct Stack* stack) {
+Status_t PopStack(struct Stack* stack) {
     assert(stack);
 
     if (stack->size <= stack->capacity / (UP_COEFF * UP_COEFF)) {
@@ -68,20 +70,24 @@ int Pop(struct Stack* stack) {
     return ERROR;
 }
 
-static void StackRealloc(struct Stack *stack, size_t new_capacity) {
+void StackRealloc(struct Stack *stack, size_t new_capacity) {
     assert(stack);
 
     if (new_capacity == 0) {
-        stack->capacity = 1;
-    } else {
-        stack->capacity = new_capacity;
+        new_capacity = 1;
     }
 
-    stack->data      = (Elem_t*)realloc(stack->data, stack->capacity * sizeof(Elem_t));
-    assert(stack->data);
+    Elem_t* new_data = (Elem_t*)realloc(stack->data, new_capacity * sizeof(Elem_t));
+
+    if (new_data != NULL) {
+        stack->data = new_data;
+        stack->capacity = new_capacity;
+    } else {
+        fprintf(stderr, "Не удалось выделить память\n");
+    }
 }
 
-struct Stack* Stack_dtr(struct Stack* stack) {
+struct Stack* StackDtr(struct Stack* stack) {
     assert(stack);
 
     free(stack->data);

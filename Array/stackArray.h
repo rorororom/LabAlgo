@@ -4,19 +4,19 @@
 #include <stdlib.h>
 
 typedef int Elem_t;
-
+typedef int Status_t;
 struct Stack{
     Elem_t* data;
     size_t  size;
     float  capacity;
 };
 
-int    Pop     (struct Stack* stack);
-int    Push    (struct Stack* stack, Elem_t value);
-Elem_t TopStack(struct Stack* stack);
+Status_t PopStack     (struct Stack* stack);
+Status_t PushStack    (struct Stack* stack, Elem_t value);
+Status_t TopStack     (struct Stack* stack, Elem_t* buffer);
 
-struct Stack* Stack_ctr   (size_t size);
-struct Stack* Stack_dtr   (struct Stack* stack);
+struct Stack* StackCtr   (size_t size);
+struct Stack* StackDtr   (struct Stack* stack);
 static void   StackRealloc(struct Stack *stack, size_t new_capacity);
 
 #endif

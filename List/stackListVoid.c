@@ -8,7 +8,7 @@
 #define RIGHT 1
 #define ERROR 0
 
-struct Stack* Stack_ctr(size_t size, size_t element_size) {
+struct Stack* StackCtr(size_t size, size_t element_size) {
     struct Stack* stack = (struct Stack*)calloc(1, sizeof(struct Stack));
     assert(stack);
 
@@ -17,7 +17,7 @@ struct Stack* Stack_ctr(size_t size, size_t element_size) {
     return stack;
 }
 
-int Push(struct Stack* stack, void* buffer, size_t size) {
+Status_t PushStack(struct Stack* stack, void* buffer, size_t size) {
     assert(stack);
     assert(buffer);
 
@@ -39,22 +39,21 @@ int Push(struct Stack* stack, void* buffer, size_t size) {
     return RIGHT;
 }
 
-int TopStack(struct Stack* stack, Elem_t* buffer) {
+Status_t StackTop(struct Stack* stack, Elem_t* buffer) {
     assert(stack);
     assert(buffer);
 
     if (stack->top == NULL) {
+        *buffer = ERROR;
         return ERROR;
     }
 
-    void* data = stack->top->data;
-
-    memcpy(buffer, data, sizeof(data));
+    *buffer = stack->top->data; // Копируем данные из вершины стека в буфер
 
     return RIGHT;
 }
 
-int Pop(struct Stack* stack) {
+Status_t PopStack(struct Stack* stack) {
     assert(stack);
     if (stack->top == NULL) {
         return ERROR;
@@ -70,12 +69,12 @@ int Pop(struct Stack* stack) {
     return RIGHT;
 }
 
-struct Stack* Stack_dtr(struct Stack* stack) {
+struct Stack* StackDtr(struct Stack* stack) {
     assert(stack);
     size_t size = stack->size;
 
     while (size--)
-        Pop(stack);
+        PopStack(stack);
 
     free(stack);
 

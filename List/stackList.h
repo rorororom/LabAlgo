@@ -4,6 +4,7 @@
 #include <stdlib.h>
 
 typedef int Elem_t;
+typedef int Status_t;
 
 struct Node {
     Elem_t data;
@@ -15,11 +16,11 @@ struct Stack{
     size_t size;
 };
 
-Elem_t TopStack(struct Stack* stack);
-int    Pop     (struct Stack* stack);
-int    Push    (Stack* stack, Elem_t value);
+Status_t StackTop  (struct Stack* stack, Elem_t* buffer);
+Status_t PopStack  (struct Stack* stack);
+Status_t PushStack (struct Stack* stack, Elem_t value);
 
-struct Stack* Stack_ctr();
-struct Stack* Stack_dtr(struct Stack* stack);
+struct Stack* StackCtr();
+struct Stack* StackDtr(struct Stack* stack);
 
 #endif
