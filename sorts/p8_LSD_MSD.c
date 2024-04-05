@@ -1,129 +1,80 @@
 #include <assert.h>
-#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <math.h>
 
-#define MAX 256
+#define SIZE_BYTE 256
+#define SHIFT_AMOUNT 8
 
-void SortStep(int *source, unsigned int *dest, int *offset, const int num, int size) {
-    unsigned int temp;
-    int i, k;
-
-    for (i = size - 1; i >= 0; i--) {
-        temp = source[i];
-        k = (temp >> num) & 0xFF;
-        offset[k]--;
-        dest[offset[k]] = temp;
-    }
-}
-
-void LSDsort(int* arr, int n) {
-    int s[4][256] = {0};
-    int i;
-    unsigned int *m_temp = (unsigned int *)malloc(n * sizeof(unsigned int));
-    int *offset = (int *)arr;
-
-    for (i = 0; i < n; i++) {
-        int k = arr[i];
-        s[0][(k >> 0) & 0xFF]++;
-        s[1][(k >> 8) & 0xFF]++;
-        s[2][(k >> 16) & 0xFF]++;
-        s[3][(k >> 24) & 0xFF]++;
-    }
-
-    for (i = 1; i < 256; i++) {
-        s[0][i] += s[0][i - 1];
-        s[1][i] += s[1][i - 1];
-        s[2][i] += s[2][i - 1];
-        s[3][i] += s[3][i - 1];
-    }
-
-    SortStep(arr, m_temp, s[0], 0, n);
-    SortStep(m_temp, arr, s[1], 8, n);
-    SortStep(arr, m_temp, s[2], 16, n);
-    SortStep(m_temp, arr, s[3], 24, n);
-
-    free(m_temp);
-}
-
-void MSDsort(int* arr, int n) {
-    int s[4][256] = {0};
-    int i;
-    unsigned int *m_temp = (unsigned int *)malloc(n * sizeof(unsigned int));
-    int offset[256] = {0};
-
-    for (i = 0; i < n; i++) {
-        unsigned int k = arr[i];
-        s[0][(k >> 24) & 0xFF]++;
-        s[1][(k >> 16) & 0xFF]++;
-        s[2][(k >> 8) & 0xFF]++;
-        s[3][(k >> 0) & 0xFF]++;
-    }
-
-    for (i = 1; i < 256; i++) {
-        s[0][i] += s[0][i - 1];
-        s[1][i] += s[1][i - 1];
-        s[2][i] += s[2][i - 1];
-        s[3][i] += s[3][i - 1];
-    }
-
-    SortStep(arr, m_temp, s[3], 0, n);
-    SortStep(m_temp, arr, s[2], 8, n);
-    SortStep(arr, m_temp, s[1], 16, n);
-    SortStep(m_temp, arr, s[0], 24, n);
-
-    free(m_temp);
-}
-
-int getMax(int* arr, int n) {
+static void MSD_sort(int *arr, size_t n, size_t shift, int *buff) {
     assert(arr);
-    int max = arr[0];
-    for (int i = 1; i < n; i++) {
-        if (arr[i] > max) {
-            max = arr[i];
-        }
+    assert(shift < SHIFT_AMOUNT * sizeof(int));
+
+    if (n <= 1)
+        return;
+
+    size_t pref_cnt[256] = {};
+
+    for (size_t i = 0; i < n; i++)
+        pref_cnt[(arr[i] >> shift) & 0xff]++;
+
+    for (size_t i = 1; i < SIZE_BYTE; i++)
+        pref_cnt[i] += pref_cnt[i - 1];
+
+    for (size_t i = n; i; i--)
+        buff[--pref_cnt[(arr[i - 1] >> shift) & 0xff]] = arr[i - 1];
+
+    memcpy(arr, buff, n * sizeof(int));
+
+    if (!shift) {
+        return;
     }
-    return max;
+
+    for (size_t i = 0; i < SIZE_BYTE - 1; i++) {
+        MSD_sort(arr + pref_cnt[i], pref_cnt[i + 1] - pref_cnt[i], shift - SHIFT_AMOUNT, buff);
+    }
+    MSD_sort(arr + pref_cnt[SIZE_BYTE - 1], n - pref_cnt[SIZE_BYTE - 1], shift - SHIFT_AMOUNT, buff);
 }
 
-void LSD_notBit(int* arr, int* res, int n) {
+void MSDsort(int* arr, size_t n)
+{
     assert(arr);
-    int *pref_cnt = (int*)malloc(MAX * sizeof(int));
-    assert(pref_cnt);
+    if (n == 0) {
+        return;
+    }
 
-    for (int shift = 0; shift < 32; shift += 8) {
-        for (int i = 0; i < MAX; i++) {
-            pref_cnt[i] = 0;
-        }
+    int *buff = calloc(n, sizeof(int));
+    assert(buff);
 
-        for (int i = 0; i < n; i++) {
-            pref_cnt[(arr[i] >> shift) & 0xFF]++;
-        }
+    MSD_sort(arr, n, (sizeof(int) - 1) * SHIFT_AMOUNT, buff);
 
-        for (int i = 1; i < MAX; ++i) {
+    free(buff);
+}
+
+//----------------------------------------------------------------------
+//----------------------------------------------------------------------
+
+void LSDsort(int* arr, size_t n)
+{
+    assert(arr);
+
+    int *buff = calloc(n, sizeof(int));
+    assert(buff);
+
+    for (size_t shift = 0; shift < SHIFT_AMOUNT * sizeof(int); shift += SHIFT_AMOUNT)
+    {
+        size_t pref_cnt[SIZE_BYTE] = {};
+
+        for (size_t i = 0; i < n; i++)
+            pref_cnt[(arr[i] >> shift) & 0xff]++;
+
+        for (size_t i = 1; i < SIZE_BYTE; i++)
             pref_cnt[i] += pref_cnt[i - 1];
-        }
 
-        for (int i = n - 1; i >= 0; i--) {
-            res[--pref_cnt[(arr[i] >> shift) & 0xFF]] = arr[i];
-        }
+        for (size_t i = n; i; i--)
+            buff[--pref_cnt[(arr[i - 1] >> shift) & 0xff]] = arr[i - 1];
 
-        int *temp = arr;
-        arr = res;
-        res = temp;
+        memcpy(arr, buff, n * sizeof(int));
     }
 
-    free(pref_cnt);
-}
-
-
-void LSDsort_notBit(int* arr, size_t n) {
-    assert(arr);
-
-    int* res = (int*)calloc(n, sizeof(int));
-    assert(res);
-
-    LSD_notBit(arr, res, n);
-    free(res);
+    free(buff);
 }
