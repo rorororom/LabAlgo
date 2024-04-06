@@ -1,12 +1,11 @@
 #include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
 
 #include "common.h"
 
 const int CNT_CHILDREN = 5;
 
-void heapifySort(int* arr, int n, int i, int k) {
+void heapify_sort(int* arr, int n, int i, int k) {
     assert(arr);
     int largest = i;
     int child;
@@ -34,13 +33,13 @@ void heapifySort(int* arr, int n, int i, int k) {
 void heap_sort(int* arr, size_t n) {
     assert(arr);
     for (int i = (n / CNT_CHILDREN) - 1; i >= 0; --i) {
-        heapifySort(arr, n, i, CNT_CHILDREN);
+        heapify_sort(arr, n, i, CNT_CHILDREN);
     }
 
     for (int i = n - 1; i > 0; --i) {
         swap(&arr[0], &arr[i]);
 
-        heapifySort(arr, i, 0, CNT_CHILDREN);
+        heapify_sort(arr, i, 0, CNT_CHILDREN);
     }
 }
 

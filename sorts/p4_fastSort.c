@@ -6,7 +6,7 @@
 #include "common.h"
 //----------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------
-int lomutoPartition(int* arr, int low, int high) {
+int lomuto_partition(int* arr, int low, int high) {
     assert(arr);
     int pivot = arr[low + (high - low) / 2];
     swap(&arr[low + (high - low) / 2], &arr[high]);
@@ -22,44 +22,44 @@ int lomutoPartition(int* arr, int low, int high) {
     return i;
 }
 
-void quicksortLomuto(int* arr, int low, int high) {
+void quicksort_lomuto(int* arr, int low, int high) {
     assert(arr);
     if (low < high) {
-        int pivot_index = lomutoPartition(arr, low, high);
-        quicksortLomuto(arr, low, pivot_index);
-        quicksortLomuto(arr, pivot_index + 1, high);
+        int pivot_index = lomuto_partition(arr, low, high);
+        quicksort_lomuto(arr, low, pivot_index);
+        quicksort_lomuto(arr, pivot_index + 1, high);
     }
 }
 
-void LomutoSort(int* arr, size_t n) {
+void lomuto_sort(int* arr, size_t n) {
     assert(arr);
     if (n == 0) {
         return;
     }
 
-    quicksortLomuto(arr, 0, n - 1);
+    quicksort_lomuto(arr, 0, n - 1);
 }
 
-void quicksortLomutoOneBranch(int* arr, int low, int high) {
+void quicksort_lomuto_one_branch(int* arr, int low, int high) {
     assert(arr);
     while (low < high) {
-        int pivot_index = lomutoPartition(arr, low, high);
-        quicksortLomutoOneBranch(arr, low, pivot_index - 1);
+        int pivot_index = lomuto_partition(arr, low, high);
+        quicksort_lomuto_one_branch(arr, low, pivot_index - 1);
         low = pivot_index + 1;
     }
 }
 
-void LomutoSortOneBranch(int* arr, size_t n) {
+void lomuto_sort_one_branch(int* arr, size_t n) {
     assert(arr);
     if (n == 0) {
         return;
     }
 
-    quicksortLomutoOneBranch(arr, 0, n - 1);
+    quicksort_lomuto_one_branch(arr, 0, n - 1);
 }
 //----------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------
-int hoarePartition(int* arr, int low, int high) {
+int hoare_partition(int* arr, int low, int high) {
     assert(arr);
     int pivot = arr[low + (high - low) / 2];
     int i = low - 1;
@@ -81,44 +81,44 @@ int hoarePartition(int* arr, int low, int high) {
     }
 }
 
-void quicksortHoare(int* arr, int low, int high) {
+void quicksort_hoare(int* arr, int low, int high) {
     assert(arr);
     if (low < high) {
-        int pivot_index = hoarePartition(arr, low, high);
-        quicksortHoare(arr, low, pivot_index);
-        quicksortHoare(arr, pivot_index + 1, high);
+        int pivot_index = hoare_partition(arr, low, high);
+        quicksort_hoare(arr, low, pivot_index);
+        quicksort_hoare(arr, pivot_index + 1, high);
     }
 }
 
-void HoareSort(int* arr, size_t n) {
+void hoare_sort(int* arr, size_t n) {
     assert(arr);
     if (n == 0) {
         return;
     }
 
-    quicksortHoare(arr, 0, n - 1);
+    quicksort_hoare(arr, 0, n - 1);
 }
 
-void quicksortHoareOneBranch(int* arr, int low, int high) {
+void quicksort_hoare_one_branch(int* arr, int low, int high) {
     assert(arr);
     while (low < high) {
-        int pivot_index = hoarePartition(arr, low, high);
-        quicksortHoareOneBranch(arr, low, pivot_index);
+        int pivot_index = hoare_partition(arr, low, high);
+        quicksort_hoare_one_branch(arr, low, pivot_index);
         low = pivot_index + 1;
     }
 }
 
-void HoareSortOneBranch(int* arr, size_t n) {
+void Hoare_sort_one_branch(int* arr, size_t n) {
     assert(arr);
     if (n == 0) {
         return;
     }
 
-    quicksortHoareOneBranch(arr, 0, n - 1);
+    quicksort_hoare_one_branch(arr, 0, n - 1);
 }
 //----------------------------------------------------------------------------------
 //----------------------------------------------------------------------------------
-int thickPartition(int* arr, int low, int high) {
+int thick_partition(int* arr, int low, int high) {
     assert(arr);
     int pivot_index = (low + high) / 2;
     int pivot = arr[pivot_index];
@@ -149,40 +149,40 @@ int thickPartition(int* arr, int low, int high) {
 }
 
 
-void quicksortThick(int* arr, int low, int high) {
+void quicksort_thick(int* arr, int low, int high) {
     assert(arr);
     if (low < high) {
-        int pivot_index = thickPartition(arr, low, high);
-        quicksortThick(arr, low, pivot_index);
-        quicksortThick(arr, pivot_index + 1, high);
+        int pivot_index = thick_partition(arr, low, high);
+        quicksort_thick(arr, low, pivot_index);
+        quicksort_thick(arr, pivot_index + 1, high);
     }
 }
 
-void ThickSort(int* arr, size_t n) {
+void thick_sort(int* arr, size_t n) {
     assert(arr);
     if (n == 0) {
         return;
     }
 
-    quicksortThick(arr, 0, n - 1);
+    quicksort_thick(arr, 0, n - 1);
 }
 
 
-void quicksortThickOneBranch(int* arr, int low, int high) {
+void quicksort_thick_one_branch(int* arr, int low, int high) {
     assert(arr);
     while (low < high) {
-        int pivot_index = thickPartition(arr, low, high);
-        quicksortThickOneBranch(arr, low, pivot_index - 1);
+        int pivot_index = thick_partition(arr, low, high);
+        quicksort_thick_one_branch(arr, low, pivot_index - 1);
         low = pivot_index + 1;
     }
 }
 
-void ThickSortOneBranch(int* arr, size_t n) {
+void thick_sort_one_branch(int* arr, size_t n) {
     assert(arr);
     if (n == 0) {
         return;
     }
 
-    quicksortThickOneBranch(arr, 0, n - 1);
+    quicksort_thick_one_branch(arr, 0, n - 1);
 }
 

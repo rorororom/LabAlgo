@@ -5,7 +5,7 @@
 #define SIZE_BYTE 256
 #define SHIFT_AMOUNT 8
 
-static void MSD_sort(int *arr, size_t n, size_t shift, int *buff) {
+static void MSD__sort(int *arr, size_t n, size_t shift, int *buff) {
     assert(arr);
     assert(shift < SHIFT_AMOUNT * sizeof(int));
 
@@ -30,12 +30,12 @@ static void MSD_sort(int *arr, size_t n, size_t shift, int *buff) {
     }
 
     for (size_t i = 0; i < SIZE_BYTE - 1; i++) {
-        MSD_sort(arr + pref_cnt[i], pref_cnt[i + 1] - pref_cnt[i], shift - SHIFT_AMOUNT, buff);
+        MSD__sort(arr + pref_cnt[i], pref_cnt[i + 1] - pref_cnt[i], shift - SHIFT_AMOUNT, buff);
     }
-    MSD_sort(arr + pref_cnt[SIZE_BYTE - 1], n - pref_cnt[SIZE_BYTE - 1], shift - SHIFT_AMOUNT, buff);
+    MSD__sort(arr + pref_cnt[SIZE_BYTE - 1], n - pref_cnt[SIZE_BYTE - 1], shift - SHIFT_AMOUNT, buff);
 }
 
-void MSDsort(int* arr, size_t n)
+void MSD_sort(int* arr, size_t n)
 {
     assert(arr);
     if (n == 0) {
@@ -45,7 +45,7 @@ void MSDsort(int* arr, size_t n)
     int *buff = calloc(n, sizeof(int));
     assert(buff);
 
-    MSD_sort(arr, n, (sizeof(int) - 1) * SHIFT_AMOUNT, buff);
+    MSD__sort(arr, n, (sizeof(int) - 1) * SHIFT_AMOUNT, buff);
 
     free(buff);
 }
@@ -53,7 +53,7 @@ void MSDsort(int* arr, size_t n)
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 
-void LSDsort(int* arr, size_t n)
+void LSD_sort(int* arr, size_t n)
 {
     assert(arr);
 

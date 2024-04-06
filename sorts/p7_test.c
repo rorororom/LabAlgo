@@ -9,7 +9,7 @@
 
 void heapify(int arr[], int n, int i) {
     int largest = i;
-    int firstChild = 5 * i + 1;
+    int firstChild = CHILDREN  * i + 1;
 
     for (int j = 1; j <= CHILDREN; j++) {
         int child = firstChild + j - 1;
@@ -26,7 +26,7 @@ void heapify(int arr[], int n, int i) {
     }
 }
 
-void heapSortWith5Children(int arr[], int n) {
+void heap_sort_with_5_children(int arr[], int n) {
     for (int i = n / 2 - 1; i >= 0; i--) {
         heapify(arr, n, i);
     }
@@ -39,7 +39,7 @@ void heapSortWith5Children(int arr[], int n) {
     }
 }
 
-int medianOfThree(int a, int b, int c) {
+int median_of_three(int a, int b, int c) {
     if (a < b) {
         if (b < c)
             return b;
@@ -58,7 +58,7 @@ int medianOfThree(int a, int b, int c) {
 }
 
 int partition(int arr[], int low, int high) {
-    int pivotIndex = medianOfThree(low, (low + high) / 2, high);
+    int pivotIndex = median_of_three(low, (low + high) / 2, high);
     int pivotValue = arr[pivotIndex];
     int i = low - 1;
     int j = high + 1;
@@ -83,7 +83,7 @@ int partition(int arr[], int low, int high) {
 }
 
 
-void introspectiveSortUtil(int arr[], int low, int high, int depth, int depthLimit) {
+void introspective_sort_util(int arr[], int low, int high, int depth, int depthLimit) {
     int size = high - low + 1;
 
     if (size <= 1) {
@@ -91,27 +91,27 @@ void introspectiveSortUtil(int arr[], int low, int high, int depth, int depthLim
     }
 
     if (size < 9) {
-        shellSortKnuth(&arr[low], size);
+        shell_sort_knuth(&arr[low], size);
         return;
     }
 
     if (depth >= depthLimit) {
-        heapSortWith5Children(&arr[low], size);
+        heap_sort_with_5_children(&arr[low], size);
         return;
     }
 
     int pivot = partition(arr, low, high);
 
-    introspectiveSortUtil(arr, low, pivot, depth + 1, depthLimit);
-    introspectiveSortUtil(arr, pivot + 1, high, depth + 1, depthLimit);
+    introspective_sort_util(arr, low, pivot, depth + 1, depthLimit);
+    introspective_sort_util(arr, pivot + 1, high, depth + 1, depthLimit);
 }
 
-void introspectiveSort(int arr[], size_t n, int depthLimit) {
+void introspective_sort(int arr[], size_t n, int depthLimit) {
     if (n == 0 || arr == NULL) {
         return;
     }
 
-    introspectiveSortUtil(arr, 0, n - 1, 0, depthLimit);
+    introspective_sort_util(arr, 0, n - 1, 0, depthLimit);
 }
 
 int* generate_random_array(size_t size) {
@@ -138,7 +138,7 @@ int main() {
 
     for (int depth = 1; depth <= 100; depth++) {
         clock_t start_time = clock();
-        introspectiveSort(arr, n, depth);
+        introspective_sort(arr, n, depth);
         clock_t end_time = clock();
         double total_time = ((double)(end_time - start_time)) / CLOCKS_PER_SEC;
 

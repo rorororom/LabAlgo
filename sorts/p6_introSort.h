@@ -3,6 +3,6 @@
 
 #include <stdlib.h>
 
-void optimalBlockSize(int* arr, size_t n);
+void optimal_block_size(int* arr, size_t n);
 
 #endif

@@ -1,7 +1,7 @@
 #include <assert.h>
-#include <stdlib.h>
 
 #include "common.h"
+#include "p1_quadraticSort.h"
 
 int compare(const void * a, const void * b) {
     return (*(int*)a - *(int*)b);
@@ -60,7 +60,7 @@ void selection_sort(int* arr, size_t n) {
     }
 }
 
-void shellSortKnuth(int* arr, size_t n) {
+void shell_sort_knuth(int* arr, size_t n) {
     assert(arr);
     if (n == 0 || arr == NULL) {
         return;

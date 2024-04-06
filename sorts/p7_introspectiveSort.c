@@ -1,17 +1,16 @@
 #include <assert.h>
 #include <stdio.h>
-#include <stdlib.h>
-#include <math.h>
 #include <time.h>
 
 #include "p1_quadraticSort.h"
+#include "p7_introspectiveSort.h"
 
 #define CHILDREN 5
 
 void heapify(int* arr, int n, int i) {
     assert(arr);
     int largest = i;
-    int firstChild = 5 * i + 1;
+    int firstChild = CHILDREN * i + 1;
 
     for (int j = 1; j <= CHILDREN; j++) {
         int child = firstChild + j - 1;
@@ -28,7 +27,7 @@ void heapify(int* arr, int n, int i) {
     }
 }
 
-void heapSortWith5Children(int* arr, int n) {
+void heap_sort_with_5_children(int* arr, int n) {
     assert(arr);
     for (int i = n / 2 - 1; i >= 0; i--) {
         heapify(arr, n, i);
@@ -42,7 +41,7 @@ void heapSortWith5Children(int* arr, int n) {
     }
 }
 
-int fineMedianOfThree(int a, int b, int c) {
+int find_median_of_three(int a, int b, int c) {
     if (a < b) {
         if (b < c)
             return b;
@@ -62,7 +61,7 @@ int fineMedianOfThree(int a, int b, int c) {
 
 int partition(int* arr, int low, int high) {
     assert(arr);
-    int pivotIndex = fineMedianOfThree(low, (low + high) / 2, high);
+    int pivotIndex = find_median_of_three(low, (low + high) / 2, high);
     int pivotValue = arr[pivotIndex];
     int i = low - 1;
     int j = high + 1;
@@ -87,7 +86,7 @@ int partition(int* arr, int low, int high) {
 }
 
 
-void introspectiveSortUtil(int* arr, int low, int high, int depth) {
+void introspective_sort_util(int* arr, int low, int high, int depth) {
     assert(arr);
     int size = high - low + 1;
 
@@ -96,31 +95,31 @@ void introspectiveSortUtil(int* arr, int low, int high, int depth) {
     }
 
     if (size < 9) {
-        shellSortKnuth(&arr[low], size);
+        shell_sort_knuth(&arr[low], size);
         return;
     }
 
     if (depth >= 16) {
-        heapSortWith5Children(&arr[low], size);
+        heap_sort_with_5_children(&arr[low], size);
         return;
     }
 
     int pivot = partition(arr, low, high);
 
-    introspectiveSortUtil(arr, low, pivot, depth + 1);
-    introspectiveSortUtil(arr, pivot + 1, high, depth + 1);
+    introspective_sort_util(arr, low, pivot, depth + 1);
+    introspective_sort_util(arr, pivot + 1, high, depth + 1);
 }
 
-void introspectiveSort(int* arr, size_t n) {
+void introspective_sort(int* arr, size_t n) {
     assert(arr);
     if (n == 0 || arr == NULL) {
         return;
     }
 
-    introspectiveSortUtil(arr, 0, n - 1, 0);
+    introspective_sort_util(arr, 0, n - 1, 0);
 }
 
-void introspectSort(int* arr, size_t n) {
+void introspect_sort(int* arr, size_t n) {
     assert(arr);
-    introspectiveSort(arr, n);
+    introspective_sort(arr, n);
 }
