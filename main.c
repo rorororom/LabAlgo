@@ -13,8 +13,7 @@
 #include "testing/testing.h"
 
 int main() {
-    testing("big_tests", LSDsort, "big_tests_qs2", "LSD", 0, 1000000, 10000, 5);
-    testing("big_tests", LSDsort, "big_tests_qs2", "MSD", 0, 1000000, 10000, 5);
+    testing("big_tests", lomuto_sort_one_branch, "big_tests_qs2", "lomut_onb", 0, 1000000, 10000, 5);
 }
 
 

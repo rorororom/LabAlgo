@@ -1,7 +1,6 @@
 #include <assert.h>
 
 #include "p3_mergeSort.h"
-#include "p3_mergeSort.h"
 
 void merge(int* arr, int low, int mid, int high, int* buff) {
     int n1 = mid - low + 1;
