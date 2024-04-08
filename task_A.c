@@ -9,6 +9,7 @@ typedef int Status_t;
 const int    SIZE          = 10;
 const int    CAPACITY      = SIZE + 5;
 const float  UP_COEFF      = 2;
+const float  DOWN_COEFF    = 0.25;
 
 struct Stack {
     Elem_t* data;
@@ -136,7 +137,7 @@ Status_t PopStack(struct Stack* stack) {
     assert(stack);
 
     if (stack->size <=      stack->capacity / (UP_COEFF * UP_COEFF)) {
-        StackRealloc(stack, stack->capacity / (UP_COEFF * UP_COEFF));
+        StackRealloc(stack, stack->capacity * DOWN_COEFF);
     }
 
     if (stack->size > 0) {
