@@ -1,36 +1,59 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void Swap                    (int* a,   int *b);
+void Swap                    (void* a, void* b, size_t size);
 void InsertionSort           (int* arr, int n);
 int  FindMedian              (int* arr, int n);
 int  FindMedianOfMedians     (int* arr, int n);
-void QsortWithMedianOfMedians(int* arr, int low, int high);
+void QsortImpl               (int* arr, int low, int high);
+void Qsort                   (int* arr, int n);
+
+void ReadInput               (int** arr, int* n, FILE* input, FILE* output);
+void PrintArray              (int* arr, int n, FILE* output);
 
 int main() {
+    FILE* input = stdin;
+    FILE* output = stdout;
+
     int N = 0;
-    int result = scanf("%d", &N);
-    if (result != 1) {
-        printf("Error: Input is not a valid integer.\n");
-        return 1;
-    }
+    int* token = NULL;
 
-    int token[N];
-    for (size_t i = 0; i < N; i++) {
-        result = scanf("%d", &token[i]);
-        if (result != 1) {
-            printf("Error: Input is not a valid integer.\n");
-            return 1;
-        }
-    }
+    ReadInput(&token, &N, input, output);
 
-    QsortWithMedianOfMedians(token, 0, N - 1);
+    Qsort(token, N);
 
-    for (int i = 0; i < N; ++i) {
-        printf("%d\n", token[i]);
-    }
+    PrintArray(token, N, output);
+
+    free(token);
 
     return 0;
+}
+
+void ReadInput(int** arr, int* n, FILE* input, FILE* output) {
+    int result = fscanf(input, "%d", n);
+    if (result != 1) {
+        fprintf(output, "Error: Input is not a valid integer.\n");
+        exit(1);
+    }
+
+    *arr = (int*)calloc(*n, sizeof(int));
+    if (*arr == NULL) {
+        fprintf(output, "Error: Memory allocation failed.\n");
+        exit(1);
+    }
+
+    for (int i = 0; i < *n; ++i) {
+        if (fscanf(input, "%d", &(*arr)[i]) != 1) {
+            fprintf(output, "Error: Input is not a valid integer.\n");
+            exit(1);
+        }
+    }
+}
+
+void PrintArray(int* arr, int n, FILE* output) {
+    for (int i = 0; i < n; ++i) {
+        fprintf(output, "%d\n", arr[i]);
+    }
 }
 
 void InsertionSort(int arr[], int n) {
@@ -55,30 +78,37 @@ int FindMedian(int arr[], int n) {
 
 int FindMedianOfMedians(int arr[], int n) {
     if (n <= 5) {
+        printf("n = %d\n", n);
         return FindMedian(arr, n);
     }
+
+    printf("aaa\n");
 
     int num_groups = (n + 4) / 5;               // разбиваем на массивы по 5 элементов
                                                 // делаем + 4, чтобы при делении с остатком засчитывался и остаток
                                                 // то есть для 11 элементов нужно 3 массива
                                                 // 2 элемента будут в отдельном массиве
 
-    int medians[num_groups];                    // создаем массивы количеством num_groups
-
-    for (int i = 0; i < num_groups; ++i) {
+    for (int i = 0; i < num_groups; i++) {
         int group_start = i * 5;
         int group_end = (group_start + 4 < n) ? group_start + 4 : n - 1; // eсли это условие истинно, то значение конца подмассива
                                                                          //будет group_start + 4.
                                                                          // eсли это условие ложно, то значение конца подмассива будет
                                                                          // n - 1.
 
-        medians[i] = FindMedian(&arr[group_start], group_end - group_start + 1); // теперь каждый подмассив быстро сортруем сортировкой стававками
+        InsertionSort(arr + group_start, group_end - group_start + 1);
+        int medianIndex = group_start + (group_end - group_start) / 2;
+        Swap(&arr[i], &arr[medianIndex], sizeof(int));
     }
 
-    return FindMedianOfMedians(medians, num_groups);  // находим медиану медиан
+    return FindMedianOfMedians(arr, num_groups);  // находим медиану медиан
 }
 
-void QsortWithMedianOfMedians(int arr[], int low, int high) {
+void Qsort(int* arr, int n) {
+    QsortImpl(arr, 0, n - 1);
+}
+
+void QsortImpl(int arr[], int low, int high) {
     if (low < high) {
         int pivot = FindMedianOfMedians(&arr[low], high - low + 1);
 
@@ -95,19 +125,62 @@ void QsortWithMedianOfMedians(int arr[], int low, int high) {
             }
 
             if (i <= j) {
-                Swap(&arr[i], &arr[j]);
+                Swap(&arr[i], &arr[j], sizeof(int));
                 i++;
                 j--;
             }
         }
 
-        QsortWithMedianOfMedians(arr, low, j);
-        QsortWithMedianOfMedians(arr, j + 1, high);
+        QsortImpl(arr, low, j);
+        QsortImpl(arr, j + 1, high);
     }
 }
 
-void Swap(int *a, int *b) {
-    int tmp = *a;
-    *a = *b;
-    *b = tmp;
+void Swap(void* a, void* b, size_t size) {
+    uint8_t* ptr_a = (uint8_t*)a;
+    uint8_t* ptr_b = (uint8_t*)b;
+
+    uint64_t tmp64 = 0;
+    uint32_t tmp32 = 0;
+    uint16_t tmp16 = 0;
+
+    while (size >= sizeof(uint64_t)) {
+        tmp64 = *((uint64_t*)ptr_a);
+        *((uint64_t*)ptr_a) = *((uint64_t*)ptr_b);
+        *((uint64_t*)ptr_b) = tmp64;
+
+        ptr_a += sizeof(uint64_t);
+        ptr_b += sizeof(uint64_t);
+        size -= sizeof(uint64_t);
+    }
+
+    while (size >= sizeof(uint32_t)) {
+        tmp32 = *((uint32_t*)ptr_a);
+        *((uint32_t*)ptr_a) = *((uint32_t*)ptr_b);
+        *((uint32_t*)ptr_b) = tmp32;
+
+        ptr_a += sizeof(uint32_t);
+        ptr_b += sizeof(uint32_t);
+        size -= sizeof(uint32_t);
+    }
+
+    while (size >= sizeof(uint16_t)) {
+        tmp16 = *((uint16_t*)ptr_a);
+        *((uint16_t*)ptr_a) = *((uint16_t*)ptr_b);
+        *((uint16_t*)ptr_b) = tmp16;
+
+        ptr_a += sizeof(uint16_t);
+        ptr_b += sizeof(uint16_t);
+        size -= sizeof(uint16_t);
+    }
+
+    while (size >= sizeof(uint8_t)) {
+        uint8_t tmp8 = *ptr_a;
+        *ptr_a = *ptr_b;
+        *ptr_b = tmp8;
+
+        ptr_a += sizeof(uint8_t);
+        ptr_b += sizeof(uint8_t);
+        size -= sizeof(uint8_t);
+    }
 }
