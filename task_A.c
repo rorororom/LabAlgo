@@ -6,108 +6,160 @@
 typedef int Elem_t;
 typedef int Status_t;
 
-const int    SIZE          = 10;
-const int    CAPACITY      = SIZE + 5;
-const float  UP_COEFF      = 2;
-const float  DOWN_COEFF    = 0.25;
+const size_t CAPACITY        = 16;
+const size_t SIZE_FOR_BUFFER = 100;
+const float  UP_COEFF        = 2;
+const float  DOWN_COEFF      = 0.25;
 
 struct Stack {
     Elem_t* data;
-    int     capacity;
-    int     size;
+    size_t  capacity;
+    size_t  size;
 };
 
-#define RIGHT 1
-#define ERROR 0
+typedef enum {
+    RIGHT = 0,
+    ERROR = 1,
+    EXIT
+} Status;
 
-char*         ReadCommand();
-int           StackCheckSize  (struct Stack* stack);
-void          InterpretCommand(struct Stack* stack, char* command)
+typedef enum {
+    STACK_EMPTY = 0,
+    STACK_NOT_EMPTY = 1
+} StackStatus;
 
-struct Stack* StackCtr    (size_t size);
-void          StackDtr(struct Stack* stack);
-Status_t      PopStack    (struct Stack* stack);
-Status_t      PushStack   (struct Stack* stack, Elem_t value);
-void          StackRealloc(struct Stack *stack, size_t new_capacity);
+char*         ReadCommand(FILE* input);
+int           InterpretCommand(struct Stack* stack, FILE* input, FILE* output);
 
-void          CommandStackTop (struct Stack* stack);
-void          CommandStackPop (struct Stack* stack);
-void          CommandStackPush(struct Stack* stack);
+/**
+ * @brief Создает новый стек и возвращает указатель на него.
+ *
+ * @param initial_capacity Начальная емкость стека.
+ * @return Указатель на новый стек или NULL, если не удалось выделить память.
+ */
+struct Stack* StackCtr(size_t initial_capacity);
 
-//--------------------------------------------------------------------------------------
+/**
+ * @brief Освобождает память, занятую стеком.
+ *
+ * @param stack Указатель на стек.
+ */
+void StackDtr(struct Stack* stack);
 
-int main()
-{
-    struct Stack stack = {};
-    StackCtr(CAPACITY);
+/**
+ * @brief Удаляет последний элемент из стека.
+ *
+ * @param stack Указатель на стек.
+ * @return RIGHT в случае успеха, ERROR если стек пуст.
+ */
+Status_t PopStack(struct Stack* stack);
+
+/**
+ * @brief Добавляет новый элемент в стек.
+ *
+ * @param stack Указатель на стек.
+ * @param value Значение для добавления в стек.
+ * @return RIGHT в случае успеха, ERROR если не удалось добавить элемент.
+ */
+Status_t PushStack(struct Stack* stack, Elem_t value);
+
+/**
+ * @brief Устанавливает новую емкость для стека.
+ *
+ * @param stack Указатель на стек.
+ * @param new_capacity Новая емкость стека.
+ * @return RIGHT в случае успеха, ERROR если не удалось перевыделить память.
+ */
+Status_t StackRealloc(struct Stack *stack, size_t new_capacity);
+
+/**
+ * @brief Очищает стек, освобождает выделенную память и создает новый пустой стек с начальной емкостью CAPACITY.
+ *
+ * @param stack Указатель на стек, который нужно очистить.
+ */
+void ClearStack(struct Stack* stack);
+
+/**
+ * @brief Проверяет, пуст ли стек.
+ *
+ * @param stack Указатель на стек.
+ * @return STACK_EMPTY если стек пуст, STACK_NOT_EMPTY если стек не пуст.
+ */
+StackStatus StackEmpty(const struct Stack* stack);
+
+/**
+ * @brief Возвращает текущий размер стека.
+ *
+ * @param stack Указатель на стек.
+ * @return Размер стека.
+ */
+Elem_t StackSize(const struct Stack* stack);
+
+Status_t      CommandStackTop (const struct Stack* stack);
+void          CommandStackPop(struct Stack* stack, FILE* output);
+Status_t      CommandStackPush(struct Stack* stack, FILE* input, FILE* output);
+
+//===========================================================
+//===================== Main Function =======================
+//===========================================================
+
+int main() {
+    struct Stack* stack = StackCtr(CAPACITY);
+
+    FILE* output = stdout;
+    FILE* input  = stdin;
+
     char* command = NULL;
 
     while (1) {
-        command = ReadCommand();
-
-        InterpretCommand(&stack, command);
-        if (strcmp(command, "exit") == 0) {
+        int res = InterpretCommand(stack, input, output);
+        if (res == ERROR || res == EXIT) {
             break;
         }
     }
 
+    StackDtr(stack);
     return 0;
-    StackDtr(&stack);
 }
 
-void InterpretCommand(struct Stack* stack, char* command) {
+//===========================================================
+//================== Stack Functions =======================
+//===========================================================
 
-    if (strcmp(command, "push")         == 0) {
-        CommandStackPush(stack);
-
-    } else if (strcmp(command, "pop")   == 0) {
-        CommandStackPop(stack);
-
-    } else if (strcmp(command, "size")  == 0) {
-        printf("%d\n", stack->size);
-
-    } else if (strcmp(command, "back")  == 0) {
-        CommandStackTop(stack);
-
-    } else if (strcmp(command, "exit")  == 0) {
-        printf("bye\n");
-
-    } else if (strcmp(command, "clear") == 0) {
-        StackDtr(stack);
-        StackCtr(CAPACITY);
-        printf("ok\n");
-    } else {
-        abort();
-    }
-}
-
-struct Stack* StackCtr(size_t size) {
+struct Stack* StackCtr(size_t initial_capacity) {
     struct Stack* stack = (struct Stack*)malloc(sizeof(struct Stack));
     if (stack == NULL) {
         return NULL;
     }
 
-    stack->data = malloc(size * sizeof(int));
+    stack->data = malloc(initial_capacity * sizeof(int));
     if (stack->data == NULL) {
         free(stack);
         return NULL;
     }
 
     stack->size = 0;
-    stack->capacity = size;
+    stack->capacity = initial_capacity;
 
     return stack;
+}
+
+void ClearStack(struct Stack* stack) {
+    assert(stack);
+
+    StackDtr(stack);
+    stack = StackCtr(CAPACITY);
 }
 
 Status_t PushStack(struct Stack* stack, Elem_t value) {
     assert(stack);
     if (stack->size >= stack->capacity) {
-        StackRealloc(stack, stack->capacity * UP_COEFF);
+        Status_t status = StackRealloc(stack, stack->capacity * UP_COEFF);
+        if (status == ERROR) {
+            return ERROR;
+        }
     }
 
-    if (stack == NULL || stack->data == NULL) {
-        return ERROR;
-    }
     if (stack->size   >= stack->capacity) {
         return ERROR;
     }
@@ -116,11 +168,11 @@ Status_t PushStack(struct Stack* stack, Elem_t value) {
     return RIGHT;
 }
 
-void StackRealloc(struct Stack *stack, size_t new_capacity) {
+Status_t StackRealloc(struct Stack *stack, size_t new_capacity) {
     assert(stack);
 
     if (new_capacity == 0) {
-        new_capacity = 1;
+        new_capacity = CAPACITY;
     }
 
     Elem_t* new_data = (Elem_t*)realloc(stack->data, new_capacity * sizeof(Elem_t));
@@ -129,15 +181,20 @@ void StackRealloc(struct Stack *stack, size_t new_capacity) {
         stack->data = new_data;
         stack->capacity = new_capacity;
     } else {
-        fprintf(stderr, "Не удалось выделить память\n");
+        return ERROR;
     }
+
+    return RIGHT;
 }
 
 Status_t PopStack(struct Stack* stack) {
     assert(stack);
 
     if (stack->size <=      stack->capacity / (UP_COEFF * UP_COEFF)) {
-        StackRealloc(stack, stack->capacity * DOWN_COEFF);
+        Status_t status = StackRealloc(stack, stack->capacity * DOWN_COEFF);
+        if (status == ERROR) {
+            return ERROR;
+        }
     }
 
     if (stack->size > 0) {
@@ -155,62 +212,115 @@ void StackDtr(struct Stack* stack) {
     free(stack);
 }
 
-void CommandStackTop(struct Stack* stack) {
+StackStatus StackEmpty(const struct Stack* stack) {
     assert(stack);
 
-    if (StackCheckSize(stack)) {
-        printf("%d\n", stack->data[stack->size - 1]);
+    if (stack->size > 0)
+        return STACK_EMPTY;
 
+    return STACK_NOT_EMPTY;
+}
+
+Elem_t StackSize(const struct Stack* stack) {
+    assert(stack);
+
+    return stack->size;
+}
+
+//=========================================================
+//=================== Command Handlers ===================
+//=========================================================
+
+Status_t CommandStackTop(const struct Stack* stack) {
+    assert(stack);
+
+    if (StackSize(stack) > 0) {
+        return RIGHT;
     } else {
-        printf("error\n");
+        return ERROR;
     }
 }
 
-void CommandStackPop(struct Stack* stack) {
+void CommandStackPop(struct Stack* stack, FILE* output) {
     assert(stack);
+    assert(output);
 
-    if (StackCheckSize(stack)) {
+    if (StackEmpty(stack)) {
+        fprintf(output, "error\n");
+    } else {
         int num = PopStack(stack);
-        printf("%d\n", num);
-
-    } else {
-        printf("error\n");
+        fprintf(output, "%d\n", num);
     }
 }
 
-void CommandStackPush(struct Stack* stack) {
+Status_t CommandStackPush(struct Stack* stack, FILE* input, FILE* output) {
     assert(stack);
+    assert(input);
+    assert(output);
 
     int value = 0;
-    int result = scanf("%d", &value);
+    int result = fscanf(input, "%d", &value);
 
     if (result != 1) {
-        printf("Error: Input is not a valid integer.\n");
-        return;
+        fprintf(output, "Error: Input is not a valid integer.\n");
+        return ERROR;
     }
 
-    int res = PushStack(stack, value);
-    printf("ok\n");
+    int status = PushStack(stack, value);
+    if (status) {
+        return ERROR;
+    } else {
+        return RIGHT;
+    }
 }
 
-char* ReadCommand() {
-    char* buffer = (char*)malloc(100 * sizeof(char));
-    if (buffer == NULL) {
-        printf("Error: Memory allocation failed.\n");
-        return NULL;
-    }
+//===========================================================
+//================== Utility Functions ======================
+//===========================================================
 
-    if (scanf("%99s", buffer) != 1) {
-        printf("Error: Failed to read input.\n");
-        free(buffer);
+char* ReadCommand(FILE* input) {
+    static char buffer[SIZE_FOR_BUFFER];
+    if (fscanf(input, "%99s", buffer) != 1) {
+        fprintf(stderr, "Error: Failed to read input.\n");
         return NULL;
     }
 
     return buffer;
 }
 
-int StackCheckSize(struct Stack* stack) {
-    assert(stack);
+int InterpretCommand(struct Stack* stack, FILE* input, FILE* output) {
+    char* command = ReadCommand(input);
+    if (command == NULL) {
+        return ERROR;
+    }
 
-    return stack->size > 0;
+    if (strcmp(command, "push") == 0) {
+        Status_t status = CommandStackPush(stack, input, output);
+        if (status) {
+            fprintf(output, "error\n");
+        } else {
+            fprintf(output, "ok\n");
+        }
+    } else if (strcmp(command, "pop") == 0) {
+        CommandStackPop(stack, output);
+    } else if (strcmp(command, "size") == 0) {
+        fprintf(output, "%d\n", StackSize(stack));
+    } else if (strcmp(command, "back") == 0) {
+        int status = CommandStackTop(stack);
+        if (status) {
+            fprintf(output, "error\n");
+        } else {
+            fprintf(output, "%d\n", stack->data[stack->size - 1]);
+        }
+    } else if (strcmp(command, "clear") == 0) {
+        ClearStack(stack);
+        fprintf(output, "ok\n");
+    } else if (strcmp(command, "exit") == 0) {
+        fprintf(output, "bye\n");
+        return EXIT;
+    } else {
+        return ERROR;
+    }
+
+    return RIGHT;
 }
