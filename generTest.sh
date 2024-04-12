@@ -4,7 +4,7 @@ readonly from=0
 readonly to=1000000
 readonly step=10000
 
-readonly k=1
+readonly k=5
 
 readonly MAX_RND=2147483647
 

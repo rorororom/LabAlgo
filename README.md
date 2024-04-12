@@ -118,7 +118,7 @@ testing("big_tests", LSDsort, "big_tests_q", "LSD", 0, 1000000, 10000, 1);
 
 **Результат**
 
-<img src = "./Pictures/radix2.png" width="500" height="250">
+<img src = "./Pictures/LM.png" width="500" height="250">
 
 **Вывод**: как будто бы они работают +- одинаково.
 
