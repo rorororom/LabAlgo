@@ -1,9 +1,10 @@
+#include <stdint.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <string.h>
 
-typedef int Elem_t;
 typedef int Status_t;
 
 const size_t CAPACITY        = 16;
@@ -12,24 +13,24 @@ const float  UP_COEFF        = 2;
 const float  DOWN_COEFF      = 0.25;
 
 struct Stack {
-    Elem_t* data;
-    size_t  capacity;
-    size_t  size;
+    void** data;
+    size_t capacity;
+    size_t size;
 };
 
 typedef enum {
-    RIGHT = 0,
+    OK    = 0,
     ERROR = 1,
-    EXIT
+    EXIT  = 2
 } Status;
 
 typedef enum {
-    STACK_EMPTY = 0,
-    STACK_NOT_EMPTY = 1
+    STACK_NOT_EMPTY = 0,
+    STACK_EMPTY = 1
 } StackStatus;
 
-char*         ReadCommand(FILE* input);
-int           InterpretCommand(struct Stack* stack, FILE* input, FILE* output);
+char* ReadCommand(FILE* input, char* buffer);
+int   InterpretCommand(struct Stack* stack, FILE* input, FILE* output, char* buffer);
 
 /**
  * @brief Создает новый стек и возвращает указатель на него.
@@ -50,7 +51,7 @@ void StackDtr(struct Stack* stack);
  * @brief Удаляет последний элемент из стека.
  *
  * @param stack Указатель на стек.
- * @return RIGHT в случае успеха, ERROR если стек пуст.
+ * @return OK в случае успеха, ERROR если стек пуст.
  */
 Status_t PopStack(struct Stack* stack);
 
@@ -59,16 +60,20 @@ Status_t PopStack(struct Stack* stack);
  *
  * @param stack Указатель на стек.
  * @param value Значение для добавления в стек.
- * @return RIGHT в случае успеха, ERROR если не удалось добавить элемент.
+ * @return OK в случае успеха, ERROR если не удалось добавить элемент.
  */
-Status_t PushStack(struct Stack* stack, Elem_t value);
+Status_t PushStack(struct Stack* stack, void* value);
 
 /**
  * @brief Устанавливает новую емкость для стека.
  *
  * @param stack Указатель на стек.
  * @param new_capacity Новая емкость стека.
- * @return RIGHT в случае успеха, ERROR если не удалось перевыделить память.
+ * @return OK в случае успеха, ERROR если не удалось перевыделить память.
+
+ * Функция `StackRealloc` изменяет емкость стека, перевыделяя память под данные стека.
+ * Если новая емкость меньше текущей, элементы стека, не помещающиеся в новую емкость, будут потеряны.
+ * Если новая емкость больше текущей, она увеличится, и данные стека будут сохранены.
  */
 Status_t StackRealloc(struct Stack *stack, size_t new_capacity);
 
@@ -93,7 +98,7 @@ StackStatus StackEmpty(const struct Stack* stack);
  * @param stack Указатель на стек.
  * @return Размер стека.
  */
-Elem_t StackSize(const struct Stack* stack);
+size_t StackSize(const struct Stack* stack);
 
 Status_t      CommandStackTop (const struct Stack* stack);
 void          CommandStackPop(struct Stack* stack, FILE* output);
@@ -109,18 +114,21 @@ int main() {
     FILE* output = stdout;
     FILE* input  = stdin;
 
-    char* command = NULL;
+    char* buffer = (char*)calloc(SIZE_FOR_BUFFER , sizeof(char));
+    assert(buffer);
 
     while (1) {
-        int res = InterpretCommand(stack, input, output);
+        int res = InterpretCommand(stack, input, output, buffer);
         if (res == ERROR || res == EXIT) {
             break;
         }
     }
 
     StackDtr(stack);
+    free(buffer); // Освобождаем выделенную память для буфера
     return 0;
 }
+
 
 //===========================================================
 //================== Stack Functions =======================
@@ -132,7 +140,7 @@ struct Stack* StackCtr(size_t initial_capacity) {
         return NULL;
     }
 
-    stack->data = malloc(initial_capacity * sizeof(int));
+    stack->data = (void**)malloc(initial_capacity * sizeof(void*));
     if (stack->data == NULL) {
         free(stack);
         return NULL;
@@ -151,7 +159,7 @@ void ClearStack(struct Stack* stack) {
     stack = StackCtr(CAPACITY);
 }
 
-Status_t PushStack(struct Stack* stack, Elem_t value) {
+Status_t PushStack(struct Stack* stack, void* value) {
     assert(stack);
     if (stack->size >= stack->capacity) {
         Status_t status = StackRealloc(stack, stack->capacity * UP_COEFF);
@@ -160,12 +168,8 @@ Status_t PushStack(struct Stack* stack, Elem_t value) {
         }
     }
 
-    if (stack->size   >= stack->capacity) {
-        return ERROR;
-    }
-
     stack->data[stack->size++] = value;
-    return RIGHT;
+    return OK;
 }
 
 Status_t StackRealloc(struct Stack *stack, size_t new_capacity) {
@@ -175,7 +179,7 @@ Status_t StackRealloc(struct Stack *stack, size_t new_capacity) {
         new_capacity = CAPACITY;
     }
 
-    Elem_t* new_data = (Elem_t*)realloc(stack->data, new_capacity * sizeof(Elem_t));
+    void** new_data = (void**)realloc(stack->data, new_capacity * sizeof(void*));
 
     if (new_data != NULL) {
         stack->data = new_data;
@@ -184,13 +188,13 @@ Status_t StackRealloc(struct Stack *stack, size_t new_capacity) {
         return ERROR;
     }
 
-    return RIGHT;
+    return OK;
 }
 
 Status_t PopStack(struct Stack* stack) {
     assert(stack);
 
-    if (stack->size <=      stack->capacity / (UP_COEFF * UP_COEFF)) {
+    if (stack->size <= stack->capacity / (UP_COEFF * UP_COEFF)) {
         Status_t status = StackRealloc(stack, stack->capacity * DOWN_COEFF);
         if (status == ERROR) {
             return ERROR;
@@ -198,9 +202,7 @@ Status_t PopStack(struct Stack* stack) {
     }
 
     if (stack->size > 0) {
-        stack->data[stack->size - 1] = 0;
-        stack->size--;
-        return RIGHT;
+        return OK;
     }
     return ERROR;
 }
@@ -216,12 +218,12 @@ StackStatus StackEmpty(const struct Stack* stack) {
     assert(stack);
 
     if (stack->size > 0)
-        return STACK_EMPTY;
+        return STACK_NOT_EMPTY;
 
-    return STACK_NOT_EMPTY;
+    return STACK_EMPTY;
 }
 
-Elem_t StackSize(const struct Stack* stack) {
+size_t StackSize(const struct Stack* stack) {
     assert(stack);
 
     return stack->size;
@@ -235,7 +237,7 @@ Status_t CommandStackTop(const struct Stack* stack) {
     assert(stack);
 
     if (StackSize(stack) > 0) {
-        return RIGHT;
+        return OK;
     } else {
         return ERROR;
     }
@@ -248,8 +250,14 @@ void CommandStackPop(struct Stack* stack, FILE* output) {
     if (StackEmpty(stack)) {
         fprintf(output, "error\n");
     } else {
-        int num = PopStack(stack);
-        fprintf(output, "%d\n", num);
+        Status_t status = PopStack(stack);
+        if (status == OK) {
+            int value = (int)(intptr_t)stack->data[stack->size - 1];
+            stack->size--;
+            fprintf(output, "%d\n", value);
+        } else {
+            fprintf(output, "error\n");
+        }
     }
 }
 
@@ -266,11 +274,11 @@ Status_t CommandStackPush(struct Stack* stack, FILE* input, FILE* output) {
         return ERROR;
     }
 
-    int status = PushStack(stack, value);
-    if (status) {
+    Status_t status = PushStack(stack, (void*)(intptr_t)value);
+    if (status == ERROR) {
         return ERROR;
     } else {
-        return RIGHT;
+        return OK;
     }
 }
 
@@ -278,8 +286,7 @@ Status_t CommandStackPush(struct Stack* stack, FILE* input, FILE* output) {
 //================== Utility Functions ======================
 //===========================================================
 
-char* ReadCommand(FILE* input) {
-    static char buffer[SIZE_FOR_BUFFER];
+char* ReadCommand(FILE* input, char* buffer) {
     if (fscanf(input, "%99s", buffer) != 1) {
         fprintf(stderr, "Error: Failed to read input.\n");
         return NULL;
@@ -288,8 +295,8 @@ char* ReadCommand(FILE* input) {
     return buffer;
 }
 
-int InterpretCommand(struct Stack* stack, FILE* input, FILE* output) {
-    char* command = ReadCommand(input);
+int InterpretCommand(struct Stack* stack, FILE* input, FILE* output, char* buffer) {
+    char* command = ReadCommand(input, buffer);
     if (command == NULL) {
         return ERROR;
     }
@@ -304,17 +311,21 @@ int InterpretCommand(struct Stack* stack, FILE* input, FILE* output) {
     } else if (strcmp(command, "pop") == 0) {
         CommandStackPop(stack, output);
     } else if (strcmp(command, "size") == 0) {
-        fprintf(output, "%d\n", StackSize(stack));
+        fprintf(output, "%zu\n", StackSize(stack));
     } else if (strcmp(command, "back") == 0) {
-        int status = CommandStackTop(stack);
-        if (status) {
-            fprintf(output, "error\n");
+        if (StackSize(stack) > 0) {
+            fprintf(output, "%d\n", (int)(intptr_t)stack->data[stack->size - 1]);
         } else {
-            fprintf(output, "%d\n", stack->data[stack->size - 1]);
+            fprintf(output, "error\n");
         }
     } else if (strcmp(command, "clear") == 0) {
-        ClearStack(stack);
-        fprintf(output, "ok\n");
+        StackDtr(stack);
+        stack = StackCtr(CAPACITY);
+        if (stack == NULL) {
+            fprintf(output, "error\n");
+        } else {
+            fprintf(output, "ok\n");
+        }
     } else if (strcmp(command, "exit") == 0) {
         fprintf(output, "bye\n");
         return EXIT;
@@ -322,5 +333,5 @@ int InterpretCommand(struct Stack* stack, FILE* input, FILE* output) {
         return ERROR;
     }
 
-    return RIGHT;
+    return OK;
 }
