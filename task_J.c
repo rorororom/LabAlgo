@@ -5,69 +5,258 @@
 #include <math.h>
 
 typedef struct {
-    int value;
-    int index;
+    size_t value;
+    size_t index;
 } Node;
 
 typedef struct {
     Node* heapArray;
-    int capacity;
-    int size;
+    size_t capacity;
+    size_t size;
 } MinMaxHeap;
 
-const int ERROR_SIZE = -1000;
-const int MAX_LEN    = 256;
+enum STATUS {
+    OK = 0,
+    ERROR = 1,
+};
 
-MinMaxHeap* InitHeap (int capacity);
-void DestroyHeap     (MinMaxHeap* heap);
-void ClearHeap       (MinMaxHeap* heap);
+typedef int status_t;
 
-char* ReadCommand();
-void InterpretCommand(MinMaxHeap* heap, char* command, int M);
-void Insert          (MinMaxHeap* heap, int value);
-void Swap            (Node* node1, Node* node2);
+const int DESCENDANTS = 6;
+const int ONE_NODE_PER_MIN_LEVEL = 3;
+const size_t SIZE_FOR_BUFFER = 100;
 
-int GetMin           (MinMaxHeap* heap);
-int GetMax           (MinMaxHeap* heap);
-int ExtractMin       (MinMaxHeap* heap);
-int ExtractMax       (MinMaxHeap* heap);
+/**
+ * @brief Инициализация кучи.
+ *
+ * @param capacity Ёмкость кучи.
+ * @return Указатель на новую структуру кучи.
+ */
+MinMaxHeap* InitHeap(int capacity);
 
-void SiftUp          (MinMaxHeap* heap, int index);
-void SiftDown        (MinMaxHeap* heap, int index);
+/**
+ * @brief Уничтожение кучи и освобождение памяти.
+ *
+ * @param heap Указатель на структуру кучи.
+ */
+void DestroyHeap(MinMaxHeap* heap);
+
+/**
+ * @brief Очистка кучи (удаление всех элементов).
+ *
+ * @param heap Указатель на структуру кучи.
+ */
+void ClearHeap(MinMaxHeap* heap);
+
+// ===================================================================================
+// ====================== USER INPUT =================================================
+// ===================================================================================
+
+/**
+ * @brief Чтение команды из ввода.
+ *
+ * @param input Файловый указатель на ввод.
+ * @return Указатель на строку с командой.
+ */
+char* ReadCommand(FILE* input);
+
+/**
+ * @brief Интерпретация команды и выполнение соответствующих действий.
+ *
+ * @param heap Указатель на структуру кучи.
+ * @param M Количество команд.
+ * @param input Файловый указатель на ввод.
+ * @param output Файловый указатель на вывод.
+ * @return Статус выполнения команды (OK или ERROR).
+ */
+status_t InterpretCommand(MinMaxHeap* heap, int M, FILE* input, FILE* output);
+
+// ===================================================================================
+// ====================== MinMax Helpers =============================================
+// ===================================================================================
+
+/**
+ * @brief Вставка нового элемента в кучу.
+ *
+ * @param heap Указатель на структуру кучи.
+ * @param value Значение нового элемента.
+ */
+void InsertMinMaxHeap(MinMaxHeap* heap, int value);
+
+/**
+ * @brief Обменивает местами два узла в MinMax куче.
+ *
+ * @param node1 Указатель на первый узел.
+ * @param node2 Указатель на второй узел.
+ */
+void Swap(Node* node1, Node* node2);
+
+/**
+ * @brief Получает минимальное значение из MinMax кучи без его извлечения.
+ *
+ * @param heap Указатель на структуру кучи.
+ * @return Минимальное значение в куче или ERROR_SIZE, если куча пуста.
+ */
+int GetMin(MinMaxHeap* heap);
+
+/**
+ * @brief Получает максимальное значение из MinMax кучи без его извлечения.
+ *
+ * @param heap Указатель на структуру кучи.
+ * @return Максимальное значение в куче или ERROR_SIZE, если куча пуста.
+ */
+int GetMax(MinMaxHeap* heap);
+
+/**
+ * @brief Извлекает минимальное значение из MinMax кучи.
+ *
+ * @param heap Указатель на структуру кучи.
+ * @return Минимальное значение в куче или ERROR_SIZE, если куча пуста.
+ */
+int ExtractMin(MinMaxHeap* heap);
+
+/**
+ * @brief Извлекает максимальное значение из MinMax кучи.
+ *
+ * @param heap Указатель на структуру кучи.
+ * @return Максимальное значение в куче или ERROR_SIZE, если куча пуста.
+ */
+int ExtractMax(MinMaxHeap* heap);
+
+/**
+ * @brief Поднимает элемент вверх по MinMax куче, чтобы восстановить её свойства.
+ *
+ * @param heap Указатель на структуру MinMax кучи.
+ * @param index Индекс элемента, который нужно поднять.
+ */
+void SiftUp(MinMaxHeap* heap, int index);
+
+/**
+ * @brief Опускает элемент вниз по MinMax куче, чтобы восстановить её свойства.
+ *
+ * @param heap Указатель на структуру MinMax кучи.
+ * @param index Индекс элемента, который нужно опустить.
+ */
+void SiftDown(MinMaxHeap* heap, int index);
+
+/**
+ * @brief Возвращает индекс максимального внука элемента в MinMax куче.
+ *
+ * @param heap Указатель на структуру MinMax кучи.
+ * @param index Индекс элемента, у которого нужно найти максимального внука.
+ * @return Индекс максимального внука.
+ */
 int GetMaxForGrandSon(MinMaxHeap* heap, int index);
+
+/**
+ * @brief Возвращает индекс минимального внука элемента в MinMax куче.
+ *
+ * @param heap Указатель на структуру MinMax кучи.
+ * @param index Индекс элемента, у которого нужно найти минимального внука.
+ * @return Индекс минимального внука.
+ */
 int GetMinForGrandSon(MinMaxHeap* heap, int index);
 
-int GetFather        (int index);
-int GetLevel         (int index);
-int LeftChildIndex   (int index);
-int RightChildIndex  (int index);
-int HasGrandparent   (int index);
-int MinValue         (int a, int b);
-int MaxValue         (int a, int b);
-int GetDed           (int index);
-int IsGrandchild     (int firstIndex, int secondIndex);
+/**
+ * @brief Возвращает индекс отца элемента в куче.
+ *
+ * @param index Индекс элемента.
+ * @return Индекс отца элемента.
+ */
+inline size_t GetFather(int index);
+
+/**
+ * @brief Возвращает уровень элемента в куче.
+ *
+ * @param index Индекс элемента.
+ * @return Уровень элемента.
+ */
+inline size_t GetLevel(int index);
+
+/**
+ * @brief Возвращает индекс левого потомка элемента в куче.
+ *
+ * @param index Индекс элемента.
+ * @return Индекс левого потомка элемента.
+ */
+inline size_t LeftChildIndex(int index);
+
+/**
+ * @brief Возвращает индекс правого потомка элемента в куче.
+ *
+ * @param index Индекс элемента.
+ * @return Индекс правого потомка элемента.
+ */
+inline size_t RightChildIndex(int index);
+
+/**
+ * @brief Проверяет, имеет ли элемент в куче дедушку.
+ *
+ * @param index Индекс элемента.
+ * @return 1, если у элемента есть дедушка, иначе 0.
+ */
+inline size_t HasGrandparent(int index);
+
+/**
+ * @brief Возвращает минимальное значение из двух чисел.
+ *
+ * @param a Первое число.
+ * @param b Второе число.
+ * @return Минимальное значение из двух чисел.
+ */
+inline int MinValue(int a, int b);
+
+/**
+ * @brief Возвращает максимальное значение из двух чисел.
+ *
+ * @param a Первое число.
+ * @param b Второе число.
+ * @return Максимальное значение из двух чисел.
+ */
+inline int MaxValue(int a, int b);
+
+/**
+ * @brief Возвращает индекс дедушки элемента в куче.
+ *
+ * @param index Индекс элемента.
+ * @return Индекс дедушки элемента.
+ */
+inline size_t GetDed(int index);
+
+/**
+ * @brief Проверяет, является ли второй индекс внуком первого индекса в куче.
+ *
+ * @param firstIndex Индекс первого элемента.
+ * @param secondIndex Индекс второго элемента.
+ * @return 1, если второй индекс является внуком первого, иначе 0.
+ */
+inline size_t IsGrandchild(int firstIndex, int secondIndex);
 
 
 //---------------------------------------------------------------------------------------
 //---------------------------------------------------------------------------------------
 
 int main() {
+    FILE* output = stdout;
+    FILE* input  = stdin;
     int M = 0;
-    int result = scanf("%d", &M);
+
+    int result = fscanf(input, "%d", &M);
 
     if (result != 1) {
         printf("Error: Input is not a valid integer.\n");
         return 1;
     }
 
-    char* command = NULL;
-
     MinMaxHeap* heap = InitHeap(M);
 
-    for (int i = 0; i < M; i++) {
-        command = ReadCommand();
+    char* command = NULL;
 
-        InterpretCommand(heap, command, M);
+    for (int i = 0; i < M; i++) {
+        int status = InterpretCommand(heap, M, input, output);
+        if (status == ERROR) {
+            break;
+        }
     }
 
     DestroyHeap(heap);
@@ -79,30 +268,42 @@ MinMaxHeap* InitHeap(int capacity) {
     assert(capacity > 0);
 
     MinMaxHeap* heap = (MinMaxHeap*)malloc(sizeof(MinMaxHeap));
+    assert(heap);
+
     heap->capacity   = capacity;
     heap->size       = 0;
     heap->heapArray  = (Node*)malloc(capacity * sizeof(Node));
+    assert(heap->heapArray);
+
     return heap;
 }
 
-int GetFather(int index) {
+inline size_t GetFather(int index) {
     assert(index >= 0);
     return (index - 1) / 2;
 }
 
-int LeftChildIndex(int index) {
+inline size_t LeftChildIndex(int index) {
     assert(index >= 0);
     return 2 * index + 1;
 }
 
-int RightChildIndex(int index) {
+inline size_t RightChildIndex(int index) {
     assert(index >= 0);
     return 2 * index + 2;
 }
 
-int GetLevel(int index) {
+int Log2Floor(int n) {
+    int log = 0;
+    while (n >>= 1) {
+        log++;
+    }
+    return log;
+}
+
+size_t GetLevel(int index) {
     assert(index >= 0);
-    return (int)floor(log2(index + 1)) % 2;
+    return (Log2Floor(index + 1)) % 2;
 }
 
 void Swap(Node* node1, Node* node2) {
@@ -114,22 +315,27 @@ void Swap(Node* node1, Node* node2) {
     *node2    = temp;
 }
 
-int HasGrandparent(int index) {
+inline size_t HasGrandparent(int index) {
     assert(index >= 0);
     return (index > 2);
 }
 
-int GetDed(int index) {
+inline int IsMaxLevel(int level) {
+    return level % 2 != 0;
+}
+
+inline size_t GetDed(int index) {
     assert(index >= 0);
     return GetFather(GetFather(index));
 }
+
 void SiftUp(MinMaxHeap* heap, int index) {
     assert(heap);
 
     int level = GetLevel(index);
     int father = GetFather(index);
 
-    if (level % 2 == 0) {
+    if (IsMaxLevel(level)) {
         if (heap->heapArray[index].value < heap->heapArray[father].value) {
             Swap(&heap->heapArray[index], &heap->heapArray[father]);
             index = father;
@@ -145,7 +351,7 @@ void SiftUp(MinMaxHeap* heap, int index) {
         int ind_ded = GetDed(index);
         level = GetLevel(index);
 
-        if (level % 2 == 0) {
+        if (IsMaxLevel(level)) {
             if (heap->heapArray[index].value > heap->heapArray[ind_ded].value) {
                 Swap(&heap->heapArray[index], &heap->heapArray[ind_ded]);
                 index = ind_ded;
@@ -166,19 +372,19 @@ void SiftUp(MinMaxHeap* heap, int index) {
 int GetMaxForGrandSon(MinMaxHeap* heap, int index) {
     assert(heap);
 
-    int ind[6] = {
-        (2 * index + 1),
-        (2 * index + 2),
+    int ind[DESCENDANTS] = {
+        (LeftChildIndex (index)),
+        (RightChildIndex(index)),
 
-        (2 * index + 1) * 2 + 1,
-        (2 * index + 1) * 2 + 2,
+        LeftChildIndex(LeftChildIndex(index)),
+        LeftChildIndex(RightChildIndex(index)),
 
-        (2 * index + 2) * 2 + 1,
-        (2 * index + 2) * 2 + 2
+        RightChildIndex(LeftChildIndex(index)),
+        RightChildIndex(RightChildIndex(index))
     };
 
     int max_index = index;
-    for (size_t i = 0; i < 6; i++) {
+    for (size_t i = 0; i < DESCENDANTS; i++) {
         if (ind[i] < heap->size) {
             if (heap->heapArray[ind[i]].value > heap->heapArray[max_index].value) {
                 max_index = ind[i];
@@ -194,19 +400,19 @@ int GetMaxForGrandSon(MinMaxHeap* heap, int index) {
 int GetMinForGrandSon(MinMaxHeap* heap, int index) {
     assert(heap);
 
-    int ind[6] = {
-        (2 * index + 1),
-        (2 * index + 2),
+    int ind[DESCENDANTS] = {
+        (LeftChildIndex (index)),
+        (RightChildIndex(index)),
 
-        (2 * index + 1) * 2 + 1,
-        (2 * index + 1) * 2 + 2,
+        LeftChildIndex(LeftChildIndex(index)),
+        LeftChildIndex(RightChildIndex(index)),
 
-        (2 * index + 2) * 2 + 1,
-        (2 * index + 2) * 2 + 2
+        RightChildIndex(LeftChildIndex(index)),
+        RightChildIndex(RightChildIndex(index))
     };
 
     int min_index = index;
-    for (size_t i = 0; i < 6; i++) {
+    for (size_t i = 0; i < DESCENDANTS; i++) {
         if (ind[i] < heap->size) {
             if (heap->heapArray[ind[i]].value < heap->heapArray[min_index].value) {
                 min_index = ind[i];
@@ -219,15 +425,15 @@ int GetMinForGrandSon(MinMaxHeap* heap, int index) {
     return min_index;
 }
 
-int MinValue(int a, int b) {
-    return (a < b) ? a : b;
+inline int MinValue(int a, int b) {
+    return (a + b - abs(a - b)) / 2;
 }
 
-int MaxValue(int a, int b) {
-    return (a > b) ? a : b;
+inline int MaxValue(int a, int b) {
+    return (a + b + abs(a - b)) / 2;
 }
 
-int IsGrandchild(int firstIndex, int secondIndex) {
+inline size_t IsGrandchild(int firstIndex, int secondIndex) {
     int leftGrandSon  = LeftChildIndex (LeftChildIndex (firstIndex));
     int rightGrandSon = RightChildIndex(RightChildIndex(firstIndex));
 
@@ -244,7 +450,7 @@ void SiftDown(MinMaxHeap* heap, int index) {
 
         int level = GetLevel(index);
 
-        if (level % 2 == 0) {
+        if (IsMaxLevel(level)) {
             int min_m = GetMaxForGrandSon(heap, index);
 
             if (heap->heapArray[min_m].value > heap->heapArray[index].value) {
@@ -289,7 +495,7 @@ void SiftDown(MinMaxHeap* heap, int index) {
 
 
 
-void Insert(MinMaxHeap* heap, int value) {
+void InsertMinMaxHeap(MinMaxHeap* heap, int value) {
     assert(heap);
 
     int index = heap->size;
@@ -305,7 +511,7 @@ int ExtractMin(MinMaxHeap* heap) {
     assert(heap);
 
     if (heap->size == 0) {
-        return ERROR_SIZE;
+        return ERROR;
     }
 
     int min_value = heap->heapArray[0].value;
@@ -315,7 +521,7 @@ int ExtractMin(MinMaxHeap* heap) {
         return min_value;
     }
 
-    if (heap->size < 3) {
+    if (heap->size < ONE_NODE_PER_MIN_LEVEL) {
         min_value = heap->heapArray[1].value;
         heap->size--;
     } else {
@@ -334,7 +540,7 @@ int ExtractMax(MinMaxHeap* heap) {
     assert(heap);
 
     if (heap->size == 0) {
-        return ERROR_SIZE;
+        return ERROR;
     }
 
     int max_value = heap->heapArray[0].value;
@@ -354,7 +560,7 @@ int GetMin(MinMaxHeap* heap) {
     assert(heap);
 
     if (heap->size == 0) {
-        return ERROR_SIZE;
+        return ERROR;
     } else if (heap->size == 1) {
         return heap->heapArray[0].value;
     } else if (heap->size == 2) {
@@ -370,7 +576,7 @@ int GetMax(MinMaxHeap* heap) {
     assert(heap);
 
     if (heap->size == 0)
-        return ERROR_SIZE;
+        return ERROR;
 
     return heap->heapArray[0].value;
 }
@@ -382,27 +588,41 @@ void DestroyHeap(MinMaxHeap* heap) {
     free(heap);
 }
 
-char* ReadCommand() {
-    char* buffer = (char*)malloc(100 * sizeof(char));
-    scanf("%s", buffer);
+void ClearHeap(MinMaxHeap* heap) {
+    assert(heap);
+
+    free(heap->heapArray);
+    heap->heapArray = (Node*)malloc(heap->capacity * sizeof(Node));
+    assert(heap->heapArray);
+
+    heap->size = 0;
+}
+
+char* ReadCommand(FILE* input) {
+    static char buffer[SIZE_FOR_BUFFER];
+    if (fscanf(input, "%99s", buffer) != 1) {
+        fprintf(stderr, "Error: Failed to read input.\n");
+        return NULL;
+    }
 
     return buffer;
 }
 
-void ClearHeap(MinMaxHeap* heap) {
-    assert(heap);
-    free(heap->heapArray);
-    heap->heapArray = (Node*)malloc(heap->capacity * sizeof(Node));
-    heap->size = 0;
-}
+status_t InterpretCommand(MinMaxHeap* heap, int M, FILE* input, FILE* output) {
+    char* command = ReadCommand(input);
+    if (command == NULL) {
+        return ERROR;
+    }
 
-void InterpretCommand(MinMaxHeap* heap, char* command, int M) {
-    assert(heap);
-
-    if (strcmp(command, "Insert") == 0) {
+    if (strcmp(command, "insert") == 0) {
         int x = 0;
-        scanf("%d", &x);
-        Insert(heap, x);
+        int result = scanf("%d", &x);
+        if (result != 1) {
+            printf("Error: Input is not a valid integer.\n");
+            return 1;
+        }
+
+        InsertMinMaxHeap(heap, x);
         printf("ok\n");
 
     } else if (strcmp(command, "extract_min") == 0) {
@@ -441,6 +661,9 @@ void InterpretCommand(MinMaxHeap* heap, char* command, int M) {
         printf("ok\n");
 
     } else {
-        printf("неправильная команда\n");
+        printf("Error command\n");
+        return ERROR;
     }
+
+    return OK;
 }
