@@ -5,57 +5,169 @@
 
 typedef struct {
     long long int value;
-    int index;
-    int index_Insert;
+    size_t index;
+    size_t index_Insert;
 } Node;
 
 typedef struct {
     Node* heapArray;
     Node** indexArray;
-    int capacity;
-    int size;
+    size_t capacity;
+    size_t size;
 } MinHeap;
 
-MinHeap* InitHeap(int capacity);
-void     DestroyHeap(MinHeap* heap);
+enum STATUS {
+    OK = 0,
+    ERROR = 1,
+    EXIT
+};
 
+typedef int status_t;
+
+const size_t SIZE_FOR_BUFFER = 100;
+
+/**
+ * @brief Инициализирует кучу с заданной начальной емкостью.
+ *
+ * @param capacity Начальная емкость кучи.
+ * @return Указатель на новую кучу или NULL, если не удалось выделить память.
+ */
+MinHeap* InitHeap(int capacity);
+
+/**
+ * @brief Освобождает память, занятую кучей.
+ *
+ * @param heap Указатель на кучу, которую нужно уничтожить.
+ */
+void DestroyHeap(MinHeap* heap);
+
+/**
+ * @brief Выполняет восходящую коррекцию кучи, начиная с заданного индекса.
+ *
+ * @param heap Указатель на кучу.
+ * @param index Индекс элемента, с которого начинается коррекция.
+ */
+void SiftUp(MinHeap* heap, int index);
+
+/**
+ * @brief Выполняет нисходящую коррекцию кучи, начиная с заданного индекса.
+ *
+ * @param heap Указатель на кучу.
+ * @param index Индекс элемента, с которого начинается коррекция.
+ */
+void SiftDown(MinHeap* heap, size_t index);
+
+/**
+ * @brief Вставляет новый элемент в кучу.
+ *
+ * @param heap Указатель на кучу.
+ * @param value Значение для вставки.
+ * @param i Индекс вставки.
+ * @return OK в случае успеха, ERROR если не удалось вставить элемент.
+ */
+status_t Insert(MinHeap* heap, int value, size_t i);
+
+/**
+ * @brief Извлекает минимальный элемент из кучи.
+ *
+ * @param heap Указатель на кучу.
+ */
+void ExtractMin(MinHeap* heap);
+
+/**
+ * @brief Проверяет, есть ли в куче минимальный элемент.
+ *
+ * @param heap Указатель на кучу.
+ * @return OK если минимальный элемент есть, ERROR если куча пуста.
+ */
+status_t GetMin(MinHeap* heap);
+
+/**
+ * @brief Уменьшает значение ключа элемента в куче по заданному индексу.
+ *
+ * @param heap Указатель на кучу.
+ * @param index Индекс элемента.
+ * @param delta Величина уменьшения ключа.
+ */
+void DecreaseKey(MinHeap* heap, int index, int delta);
+
+/**
+ * @brief Обменивает значения двух элементов кучи по их индексам.
+ *
+ * @param heap Указатель на кучу.
+ * @param index1 Индекс первого элемента.
+ * @param index2 Индекс второго элемента.
+ */
 void Swap(MinHeap* heap, int index1, int index2);
 
-int  ParentIndex    (int index);
-int  LeftChildIndex (int index);
-int  RightChildIndex(int index);
+/**
+ * @brief Возвращает индекс родительского элемента для заданного индекса.
+ *
+ * @param index Индекс элемента.
+ * @return Индекс родительского элемента.
+ */
+size_t ParentIndex(int index);
 
-void SiftUp     (MinHeap* heap, int index);
-void SiftDown   (MinHeap* heap, int index);
-void Insert     (MinHeap* heap, int value, int i);
-void ExtractMin (MinHeap* heap);
-void DecreaseKey(MinHeap* heap, int index, int delta);
-void GetMin     (MinHeap* heap);
-char* ReadCommand();
+/**
+ * @brief Возвращает индекс левого потомка для заданного индекса.
+ *
+ * @param index Индекс элемента.
+ * @return Индекс левого потомка.
+ */
+size_t LeftChildIndex(int index);
 
-void InterpretCommand(MinHeap* heap, char* command, int index);
+/**
+ * @brief Возвращает индекс правого потомка для заданного индекса.
+ *
+ * @param index Индекс элемента.
+ * @return Индекс правого потомка.
+ */
+size_t RightChildIndex(int index);
 
-//--------------------------------------------------------------------
-//--------------------------------------------------------------------
+/**
+ * @brief Читает следующую команду из входного потока.
+ *
+ * @param input Входной поток.
+ * @param buffer Буфер для сохранения команды.
+ * @return Указатель на считанную команду или NULL в случае ошибки.
+ */
+char* ReadCommand(FILE* input, char* buffer);
+
+/**
+ * @brief Интерпретирует команду и выполняет соответствующие действия над кучей.
+ *
+ * @param heap Указатель на кучу.
+ * @param index Индекс операции (номер команды).
+ * @param input Входной поток.
+ * @param output Выходной поток.
+ * @param buffer Буфер для чтения команды.
+ * @return OK в случае успешного выполнения, ERROR при возникновении ошибки, EXIT если выполнение программы должно завершиться.
+ */
+status_t InterpretCommand(MinHeap* heap, int index, FILE* input, FILE* output, char* buffer);
+
+//===========================================================
+//===================== Main Function =======================
+//===========================================================
 
 int main() {
-    int q = 0;
-    int result = scanf("%d", &q);
+    FILE* output = stdout;
+    FILE* input  = stdin;
 
+    int N = 0;
+    int result = scanf("%d", &N);
     if (result != 1) {
-        printf("Error: Input is not a valid integer.\n");
+        fprintf(output, "Error: Input is not a valid integer.\n");
         return 1;
     }
 
-    char* command = NULL;
+    MinHeap* heap = InitHeap(N);
 
-    MinHeap* heap = InitHeap(q);
+    char* buffer = (char*)calloc(SIZE_FOR_BUFFER , sizeof(char));
+    assert(buffer);
 
-    for (int i = 0; i < q; i++) {
-        command = ReadCommand();
-
-        InterpretCommand(heap, command, i + 1);
-        if (strcmp(command, "exit") == 0) {
+    for (int i = 0; i < N; i++) {
+        int status = InterpretCommand(heap, i + 1, input, output, buffer);
+        if (status == ERROR || status == EXIT) {
             break;
         }
     }
@@ -64,50 +176,26 @@ int main() {
     return 0;
 }
 
+//===========================================================
+//===================== Heap Function =======================
+//===========================================================
+
 MinHeap* InitHeap(int capacity) {
     assert(capacity  > 0);
+
     MinHeap* heap    = (MinHeap*)malloc(                 sizeof(MinHeap));
-    heap->capacity   = capacity;
-    heap->size       = 0;
-    heap->heapArray  = (Node*)   malloc( capacity      * sizeof(Node));
-    heap->indexArray = (Node**)  malloc((capacity + 1) * sizeof(Node*));
-
-    return heap;
-}
-
-void Swap(MinHeap* heap, int index1, int index2) {
     assert(heap);
 
-    long long int value1                 = heap->heapArray[index1].value;
-    long long int value2                 = heap->heapArray[index2].value;
+    heap->capacity   = capacity;
+    heap->size       = 0;
 
-    int index_Insert1                    = heap->heapArray[index1].index_Insert;
-    int index_Insert2                    = heap->heapArray[index2].index_Insert;
+    heap->heapArray  = (Node*)   malloc( capacity      * sizeof(Node));
+    assert(heap->heapArray);
 
-    heap->heapArray[index1].value        = value2;
-    heap->heapArray[index2].value        = value1;
+    heap->indexArray = (Node**)  malloc((capacity + 1) * sizeof(Node*));
+    assert(heap->indexArray);
 
-    heap->heapArray[index1].index_Insert = index_Insert2;
-    heap->heapArray[index2].index_Insert = index_Insert1;
-
-    heap->indexArray[index_Insert1]      = &heap->heapArray[index2];
-    heap->indexArray[index_Insert2]      = &heap->heapArray[index1];
-}
-
-
-int ParentIndex(int index) {
-    assert(index >= 0);
-    return (index - 1) / 2;
-}
-
-int LeftChildIndex(int index) {
-    assert(index >= 0);
-    return 2 * index + 1;
-}
-
-int RightChildIndex(int index) {
-    assert(index >= 0);
-    return 2 * index + 2;
+    return heap;
 }
 
 void SiftUp(MinHeap* heap, int index) {
@@ -118,12 +206,11 @@ void SiftUp(MinHeap* heap, int index) {
     }
 }
 
-void Insert(MinHeap* heap, int value, int i) {
+status_t Insert(MinHeap* heap, int value, size_t i) {
     assert(heap);
 
     if (heap->size == heap->capacity) {
-        printf("Куча заполнена\n");
-        return;
+        return ERROR;
     }
 
     int index                            = heap->size;
@@ -135,9 +222,10 @@ void Insert(MinHeap* heap, int value, int i) {
     heap->size++;
 
     SiftUp(heap, index);
+    return OK;
 }
 
-void SiftDown(MinHeap* heap, int index) {
+void SiftDown(MinHeap* heap, size_t index) {
     assert(heap);
 
     while (1) {
@@ -178,8 +266,6 @@ void ExtractMin(MinHeap* heap) {
 void DecreaseKey(MinHeap* heap, int index, int delta) {
     assert(heap);
 
-    assert(heap);
-
     int heapIndex                     = heap->indexArray[index]->index;
     heap->heapArray[heapIndex].value -= delta;
 
@@ -190,15 +276,14 @@ void DecreaseKey(MinHeap* heap, int index, int delta) {
     }
 }
 
-void GetMin(MinHeap* heap) {
+status_t GetMin(MinHeap* heap) {
     assert(heap);
 
     if (heap->size <= 0) {
-        printf("Куча пуста\n");
-        return;
+        return ERROR;
     }
 
-    printf("%lld\n", heap->heapArray[0].value);
+    return OK;
 }
 
 void DestroyHeap(MinHeap* heap) {
@@ -208,33 +293,112 @@ void DestroyHeap(MinHeap* heap) {
     free(heap);
 }
 
-char* ReadCommand() {
-    char* buffer = (char*)malloc(100 * sizeof(char));
-    scanf("%s", buffer);
+//=========================================================
+//=================== Get Index Functions =================
+//=========================================================
+
+size_t ParentIndex(int index) {
+    assert(index >= 0);
+
+    return (index - 1) / 2;
+}
+
+size_t LeftChildIndex(int index) {
+    assert(index >= 0);
+
+    return 2 * index + 1;
+}
+
+size_t RightChildIndex(int index) {
+    assert(index >= 0);
+
+    return 2 * index + 2;
+}
+
+//=========================================================
+//=================== Swap ================================
+//=========================================================
+
+void Swap(MinHeap* heap, int index1, int index2) {
+    assert(heap);
+
+    long long int value1                 = heap->heapArray[index1].value;
+    long long int value2                 = heap->heapArray[index2].value;
+
+    int index_Insert1                    = heap->heapArray[index1].index_Insert;
+    int index_Insert2                    = heap->heapArray[index2].index_Insert;
+
+    heap->heapArray[index1].value        = value2;
+    heap->heapArray[index2].value        = value1;
+
+    heap->heapArray[index1].index_Insert = index_Insert2;
+    heap->heapArray[index2].index_Insert = index_Insert1;
+
+    heap->indexArray[index_Insert1]      = &heap->heapArray[index2];
+    heap->indexArray[index_Insert2]      = &heap->heapArray[index1];
+}
+
+//=========================================================
+//=================== Command Handlers ====================
+//=========================================================
+
+char* ReadCommand(FILE* input, char* buffer) {
+    assert(input);
+
+    if (fscanf(input, "%99s", buffer) != 1) {
+        fprintf(stderr, "Error: Failed to read input.\n");
+        return NULL;
+    }
 
     return buffer;
 }
 
-void InterpretCommand(MinHeap* heap, char* command, int index) {
+status_t InterpretCommand(MinHeap* heap, int index, FILE* input, FILE* output, char* buffer) {
     assert(heap);
-    assert(command);
+    assert(input);
+    assert(output);
 
-    if (strcmp(command, "Insert") == 0) {
+    char* command = ReadCommand(input, buffer);
+    if (command == NULL) {
+        return ERROR;
+    }
+
+    if (strcmp(command, "insert") == 0) {
         int x = 0;
-        scanf("%d", &x);
-        Insert(heap, x, index);
+        int result = fscanf(input, "%d", &x);
+        if (result != 1) {
+            return ERROR;
+        }
 
-    } else if (strcmp(command, "DecreaseKey") == 0) {
+        int status = Insert(heap, x, index);
+        if (status) {
+            fprintf(output, "Failed to insert element\n");
+        }
+        getchar();
+
+    } else if (strcmp(command, "decreaseKey") == 0) {
         int i = 0, del_x = 0;
-        scanf("%d %d", &i, &del_x);
+        int result = fscanf(input, "%d %d", &i, &del_x);
+        if (result != 2) {
+            return ERROR;
+        }
+
         DecreaseKey(heap, i, del_x);
 
-    } else if (strcmp(command, "ExtractMin") == 0) {
+    } else if (strcmp(command, "extractMin") == 0) {
         ExtractMin(heap);
 
-    } else if (strcmp(command, "GetMin") == 0) {
-        GetMin(heap);
+    } else if (strcmp(command, "getMin") == 0) {
+        if (GetMin(heap) == OK) {
+            fprintf(output, "%lld\n", heap->heapArray[0].value);
+        }
+
+    } else if (strcmp(command, "exit") == 0) {
+        return EXIT;
+
     } else {
-        abort();
+        return ERROR;
     }
+
+    return OK;
 }
