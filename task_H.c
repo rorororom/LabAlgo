@@ -1,63 +1,51 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-void Swap                    (void* a, void* b, size_t size);
-void InsertionSort           (int* arr, int n);
-int  FindMedian              (int* arr, int n);
-int  FindMedianOfMedians     (int* arr, int n);
-void QsortImpl               (int* arr, int low, int high);
-void Qsort                   (int* arr, int n);
+//================Array Input/Output Functions===================
+void InputArray(int** arr, size_t* n, FILE* input, FILE* output);
+void PrintArray(int*  arr, size_t size);
 
-void ReadInput               (int** arr, int* n, FILE* input, FILE* output);
-void PrintArray              (int* arr, int n, FILE* output);
+//================Sorting and Selection Functions================
+void   Qsort        (int* arr, size_t left, size_t right);
+size_t GetPivot     (int* arr, size_t left, size_t right);
+size_t Select       (int* arr, size_t left, size_t right, size_t n);
+size_t Partition    (int* arr, size_t left, size_t right, size_t GetPivot);
+void   InsertionSort(int* arr, size_t n);
+
+//================Swap===========================================
+void Swap(void* a, void* b, size_t size);
 
 int main() {
     FILE* input = stdin;
     FILE* output = stdout;
 
-    int N = 0;
+    size_t N = 0;
     int* token = NULL;
+    InputArray(&token, &N, input, output);
 
-    ReadInput(&token, &N, input, output);
+    Qsort(token, 0, N - 1);
 
-    Qsort(token, N);
-
-    PrintArray(token, N, output);
-
-    free(token);
+    PrintArray(token, N);
 
     return 0;
 }
 
-void ReadInput(int** arr, int* n, FILE* input, FILE* output) {
-    int result = fscanf(input, "%d", n);
-    if (result != 1) {
-        fprintf(output, "Error: Input is not a valid integer.\n");
-        exit(1);
-    }
+//===============================================================
+//================Sorting and Selection Functions================
+//===============================================================
 
-    *arr = (int*)calloc(*n, sizeof(int));
-    if (*arr == NULL) {
-        fprintf(output, "Error: Memory allocation failed.\n");
-        exit(1);
-    }
+void Qsort(int* arr, size_t left, size_t right) {
+    if (left < right) {
+        size_t GetPivotIndex = GetPivot(arr, left, right);
+        size_t newGetPivotIndex = Partition(arr, left, right, GetPivotIndex);
 
-    for (int i = 0; i < *n; ++i) {
-        if (fscanf(input, "%d", &(*arr)[i]) != 1) {
-            fprintf(output, "Error: Input is not a valid integer.\n");
-            exit(1);
-        }
+        Qsort(arr, left, newGetPivotIndex - 1);
+        Qsort(arr, newGetPivotIndex + 1, right);
     }
 }
 
-void PrintArray(int* arr, int n, FILE* output) {
-    for (int i = 0; i < n; ++i) {
-        fprintf(output, "%d\n", arr[i]);
-    }
-}
-
-void InsertionSort(int arr[], int n) {
-    for (int i = 1; i < n; ++i) {
+void InsertionSort(int* arr, size_t n) {
+    for (size_t i = 1; i < n; ++i) {
         int current = arr[i];
         int j = i - 1;
 
@@ -70,71 +58,92 @@ void InsertionSort(int arr[], int n) {
     }
 }
 
-int FindMedian(int arr[], int n) {
-    InsertionSort(arr, n);          // если длина массива <= 5, то можно быстро отсортировать массив,
-                                    // используя сортировку вставками
-    return arr[n / 2];              // возвращаем медиану
-}
+size_t Partition(int* arr, size_t left, size_t right, size_t GetPivot) {
+    int GetPivotValue = arr[GetPivot];
+    arr[GetPivot] = arr[right];
+    arr[right] = GetPivotValue;
 
-int FindMedianOfMedians(int arr[], int n) {
-    if (n <= 5) {
-        printf("n = %d\n", n);
-        return FindMedian(arr, n);
-    }
-
-    printf("aaa\n");
-
-    int num_groups = (n + 4) / 5;               // разбиваем на массивы по 5 элементов
-                                                // делаем + 4, чтобы при делении с остатком засчитывался и остаток
-                                                // то есть для 11 элементов нужно 3 массива
-                                                // 2 элемента будут в отдельном массиве
-
-    for (int i = 0; i < num_groups; i++) {
-        int group_start = i * 5;
-        int group_end = (group_start + 4 < n) ? group_start + 4 : n - 1; // eсли это условие истинно, то значение конца подмассива
-                                                                         //будет group_start + 4.
-                                                                         // eсли это условие ложно, то значение конца подмассива будет
-                                                                         // n - 1.
-
-        InsertionSort(arr + group_start, group_end - group_start + 1);
-        int medianIndex = group_start + (group_end - group_start) / 2;
-        Swap(&arr[i], &arr[medianIndex], sizeof(int));
-    }
-
-    return FindMedianOfMedians(arr, num_groups);  // находим медиану медиан
-}
-
-void Qsort(int* arr, int n) {
-    QsortImpl(arr, 0, n - 1);
-}
-
-void QsortImpl(int arr[], int low, int high) {
-    if (low < high) {
-        int pivot = FindMedianOfMedians(&arr[low], high - low + 1);
-
-        int i = low;
-        int j = high;
-
-        while (i <= j) {
-            while (arr[i] < pivot) {
-                i++;
-            }
-
-            while (arr[j] > pivot) {
-                j--;
-            }
-
-            if (i <= j) {
-                Swap(&arr[i], &arr[j], sizeof(int));
-                i++;
-                j--;
-            }
+    size_t storeIndex = left;
+    for (size_t i = left; i < right; ++i) {
+        if (arr[i] < GetPivotValue) {
+            Swap(&arr[i], &arr[storeIndex], sizeof(int));
+            storeIndex++;
         }
+    }
 
-        QsortImpl(arr, low, j);
-        QsortImpl(arr, j + 1, high);
+    Swap(&arr[storeIndex], &arr[right], sizeof(int));
+
+    return storeIndex;
+}
+
+size_t Select(int* arr, size_t left, size_t right, size_t n) {
+    while (1) {
+        if (left == right) {
+            return left;
+        }
+        size_t GetPivotIndex = (left + right) / 2;
+        GetPivotIndex = Partition(arr, left, right, GetPivotIndex);
+        if (n == GetPivotIndex) {
+            return n;
+        } else if (n < GetPivotIndex) {
+            right = GetPivotIndex - 1;
+        } else {
+            left = GetPivotIndex + 1;
+        }
     }
 }
+
+size_t GetPivot(int* arr, size_t left, size_t right) {
+    if (right - left < 5) {
+        return (left + right) / 2;
+    }
+    for (size_t i = left; i <= right; i += 5) {
+        size_t subRight = i + 4;
+        if (subRight > right) {
+            subRight = right;
+        }
+        size_t median5 = (i + subRight) / 2;
+        Swap(&arr[median5], &arr[left + (i - left) / 5], sizeof(int));
+    }
+    size_t mid = (left + right) / 10;
+    return Select(arr, left, left + (right - left) / 5, mid);
+}
+
+//===============================================================
+//================Array Input/Output Functions===================
+//===============================================================
+
+void PrintArray(int* arr, size_t size) {
+    for (size_t i = 0; i < size; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
+}
+
+void InputArray(int** arr, size_t* n, FILE* input, FILE* output) {
+    int result = fscanf(input, "%zu", n);
+    if (result != 1) {
+        fprintf(output, "Error: Input is not a valid integer.\n");
+        exit(1);
+    }
+
+    *arr = (int*)calloc(*n, sizeof(int));
+    if (*arr == NULL) {
+        fprintf(output, "Error: Memory allocation failed.\n");
+        exit(1);
+    }
+
+    for (size_t i = 0; i < *n; ++i) {
+        if (fscanf(input, "%d", &(*arr)[i]) != 1) {
+            fprintf(output, "Error: Input is not a valid integer.\n");
+            exit(1);
+        }
+    }
+}
+
+//===============================================================
+//================Swap===========================================
+//===============================================================
 
 void Swap(void* a, void* b, size_t size) {
     uint8_t* ptr_a = (uint8_t*)a;
