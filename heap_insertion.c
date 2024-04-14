@@ -4,19 +4,7 @@
 
 #include "common.h"
 
-Heap* initHeap(size_t capacity) {
-    Heap* heap = (Heap*)malloc(sizeof(Heap));
-    assert(heap);
-
-    heap->capacity = capacity;
-    heap->size = 0;
-    heap->heapArray = (Node*)malloc(capacity * sizeof(Node));
-    assert(heap->heapArray);
-
-    return heap;
-}
-
-void swap(int* arr, size_t index1, size_t index2) {
+void Swap(int* arr, size_t index1, size_t index2) {
     assert(arr != NULL);
 
     int temp = arr[index1];
@@ -24,23 +12,23 @@ void swap(int* arr, size_t index1, size_t index2) {
     arr[index2] = temp;
 }
 
-int parentIndex(size_t index) {
+int ParentIndex(size_t index) {
     return (index - 1) / 2;
 }
 
-void siftUp(int* arr, size_t index) {
+void SiftUp(int* arr, size_t index) {
     assert(arr);
 
-    while (index > 0 && arr[index] < arr[parentIndex(index)]) {
-        swap(arr, index, parentIndex(index));
-        index = parentIndex(index);
+    while (index > 0 && arr[index] < arr[ParentIndex(index)]) {
+        Swap(arr, index, ParentIndex(index));
+        index = ParentIndex(index);
     }
 }
 
-void HeapInsertion(int* arr, size_t n) {
+void BuildHeapLinearly(int* arr, size_t n) {
     assert(arr);
 
     for (size_t i = 0; i < n; i++) {
-        siftUp(arr, i);
+        SiftUp(arr, i);
     }
 }
