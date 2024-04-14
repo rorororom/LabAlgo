@@ -1,19 +1,33 @@
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
+
+#define SWAP(unitxx_t, tmpxx)                          \
+    while (size >= sizeof(unitxx_t)) {                 \
+        tmpxx = *((unitxx_t*)ptr_a);                   \
+        *((unitxx_t*)ptr_a) = *((unitxx_t*)ptr_b);     \
+        *((unitxx_t*)ptr_b) = tmpxx;                   \
+                                                       \
+        ptr_a += sizeof(unitxx_t);                     \
+        ptr_b += sizeof(unitxx_t);                     \
+        size -= sizeof(unitxx_t);                      \
+    }
 
 //================Array Input/Output Functions===================
 void InputArray(int** arr, size_t* n, FILE* input, FILE* output);
 void PrintArray(int*  arr, size_t size);
 
 //================Sorting and Selection Functions================
-void   Qsort        (int* arr, size_t left, size_t right);
-size_t GetPivot     (int* arr, size_t left, size_t right);
-size_t Select       (int* arr, size_t left, size_t right, size_t n);
-size_t Partition    (int* arr, size_t left, size_t right, size_t GetPivot);
-void   InsertionSort(int* arr, size_t n);
+void   Qsort         (int* arr, size_t left, size_t right);
+size_t HoarePartition(int* arr, size_t left, size_t right);
+size_t GetPivot      (int* arr, size_t left, size_t right);
+size_t Select        (int* arr, size_t left, size_t right, size_t n);
+void   InsertionSort (int* arr, int left, int right);
 
 //================Swap===========================================
 void Swap(void* a, void* b, size_t size);
+// void Swap(int* a, int* b);
 
 int main() {
     FILE* input = stdin;
@@ -36,16 +50,50 @@ int main() {
 
 void Qsort(int* arr, size_t left, size_t right) {
     if (left < right) {
-        size_t GetPivotIndex = GetPivot(arr, left, right);
-        size_t newGetPivotIndex = Partition(arr, left, right, GetPivotIndex);
-
-        Qsort(arr, left, newGetPivotIndex - 1);
-        Qsort(arr, newGetPivotIndex + 1, right);
+        size_t pivotIndex = HoarePartition(arr, left, right);
+        Qsort(arr, left, pivotIndex);
+        Qsort(arr, pivotIndex + 1, right);
     }
 }
 
-void InsertionSort(int* arr, size_t n) {
-    for (size_t i = 1; i < n; ++i) {
+size_t HoarePartition(int* arr, size_t left, size_t right) {
+    int pivot = arr[GetPivot(arr, left, right)];
+    size_t i = left - 1;
+    size_t j = right + 1;
+    while (1) {
+        do {
+            i++;
+        } while (arr[i] < pivot);
+        do {
+            j--;
+        } while (arr[j] > pivot);
+        if (i >= j) {
+            return j;
+        }
+        Swap(&arr[i], &arr[j], sizeof(int));
+    }
+}
+
+size_t GetPivot(int* arr, size_t left, size_t right) {
+    if (right - left < 5) {
+        InsertionSort(arr, left, right);
+        return (left + right) / 2;
+    }
+    for (size_t i = left; i <= right; i += 5) {
+        size_t subRight = i + 4;
+        if (subRight > right) {
+            subRight = right;
+        }
+        size_t median5 = (i + subRight) / 2;
+        Swap(&arr[median5], &arr[left + (i - left) / 5], sizeof(int));
+    }
+    size_t mid = (right - left) / 10 + left + 1;
+    return Select(arr, left, left + (right - left) / 5, mid);
+}
+
+
+void InsertionSort(int* arr, int left, int right) {
+    for (size_t i = left + 1; i < right; ++i) {
         int current = arr[i];
         int j = i - 1;
 
@@ -58,55 +106,22 @@ void InsertionSort(int* arr, size_t n) {
     }
 }
 
-size_t Partition(int* arr, size_t left, size_t right, size_t GetPivot) {
-    int GetPivotValue = arr[GetPivot];
-    arr[GetPivot] = arr[right];
-    arr[right] = GetPivotValue;
-
-    size_t storeIndex = left;
-    for (size_t i = left; i < right; ++i) {
-        if (arr[i] < GetPivotValue) {
-            Swap(&arr[i], &arr[storeIndex], sizeof(int));
-            storeIndex++;
-        }
-    }
-
-    Swap(&arr[storeIndex], &arr[right], sizeof(int));
-
-    return storeIndex;
-}
-
 size_t Select(int* arr, size_t left, size_t right, size_t n) {
+    assert(arr);
     while (1) {
         if (left == right) {
             return left;
         }
-        size_t GetPivotIndex = (left + right) / 2;
-        GetPivotIndex = Partition(arr, left, right, GetPivotIndex);
-        if (n == GetPivotIndex) {
+        size_t pivotIndex = GetPivot(arr, left, right);
+        pivotIndex = HoarePartition(arr, left, right);
+        if (n == pivotIndex) {
             return n;
-        } else if (n < GetPivotIndex) {
-            right = GetPivotIndex - 1;
+        } else if (n < pivotIndex) {
+            right = pivotIndex - 1;
         } else {
-            left = GetPivotIndex + 1;
+            left = pivotIndex + 1;
         }
     }
-}
-
-size_t GetPivot(int* arr, size_t left, size_t right) {
-    if (right - left < 5) {
-        return (left + right) / 2;
-    }
-    for (size_t i = left; i <= right; i += 5) {
-        size_t subRight = i + 4;
-        if (subRight > right) {
-            subRight = right;
-        }
-        size_t median5 = (i + subRight) / 2;
-        Swap(&arr[median5], &arr[left + (i - left) / 5], sizeof(int));
-    }
-    size_t mid = (left + right) / 10;
-    return Select(arr, left, left + (right - left) / 5, mid);
 }
 
 //===============================================================
@@ -146,50 +161,18 @@ void InputArray(int** arr, size_t* n, FILE* input, FILE* output) {
 //===============================================================
 
 void Swap(void* a, void* b, size_t size) {
+    assert(a);
+    assert(b);
     uint8_t* ptr_a = (uint8_t*)a;
     uint8_t* ptr_b = (uint8_t*)b;
 
     uint64_t tmp64 = 0;
     uint32_t tmp32 = 0;
     uint16_t tmp16 = 0;
+    uint8_t  tmp8  = 0;
 
-    while (size >= sizeof(uint64_t)) {
-        tmp64 = *((uint64_t*)ptr_a);
-        *((uint64_t*)ptr_a) = *((uint64_t*)ptr_b);
-        *((uint64_t*)ptr_b) = tmp64;
-
-        ptr_a += sizeof(uint64_t);
-        ptr_b += sizeof(uint64_t);
-        size -= sizeof(uint64_t);
-    }
-
-    while (size >= sizeof(uint32_t)) {
-        tmp32 = *((uint32_t*)ptr_a);
-        *((uint32_t*)ptr_a) = *((uint32_t*)ptr_b);
-        *((uint32_t*)ptr_b) = tmp32;
-
-        ptr_a += sizeof(uint32_t);
-        ptr_b += sizeof(uint32_t);
-        size -= sizeof(uint32_t);
-    }
-
-    while (size >= sizeof(uint16_t)) {
-        tmp16 = *((uint16_t*)ptr_a);
-        *((uint16_t*)ptr_a) = *((uint16_t*)ptr_b);
-        *((uint16_t*)ptr_b) = tmp16;
-
-        ptr_a += sizeof(uint16_t);
-        ptr_b += sizeof(uint16_t);
-        size -= sizeof(uint16_t);
-    }
-
-    while (size >= sizeof(uint8_t)) {
-        uint8_t tmp8 = *ptr_a;
-        *ptr_a = *ptr_b;
-        *ptr_b = tmp8;
-
-        ptr_a += sizeof(uint8_t);
-        ptr_b += sizeof(uint8_t);
-        size -= sizeof(uint8_t);
-    }
+    SWAP(uint64_t, tmp64);
+    SWAP(uint32_t, tmp32);
+    SWAP(uint16_t, tmp16);
+    SWAP(uint8_t, tmp8);
 }
