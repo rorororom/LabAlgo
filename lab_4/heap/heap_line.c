@@ -3,6 +3,14 @@
 
 #include "common.h"
 
+void Swap(int* arr, size_t index1, size_t index2) {
+    assert(arr != NULL);
+
+    int temp    = arr[index1];
+    arr[index1] = arr[index2];
+    arr[index2] = temp;
+}
+
 void SiftDown(int* arr, int n, int index) {
     assert(arr);
     assert(n     >= 0);
@@ -27,7 +35,7 @@ void SiftDown(int* arr, int n, int index) {
     }
 }
 
-void HeapLine(int* arr, size_t n) {
+void BuildHeapLinearly(int* arr, size_t n) {
     assert(arr);
     for (int i = n / 2; i >= 0; --i) {
         SiftDown(arr, n, i);

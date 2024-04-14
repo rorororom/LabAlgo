@@ -25,7 +25,7 @@ void SiftUp(int* arr, size_t index) {
     }
 }
 
-void HeapInsertion(int* arr, size_t n) {
+void BuildHeapByInsertion(int* arr, size_t n) {
     assert(arr);
 
     for (size_t i = 0; i < n; i++) {

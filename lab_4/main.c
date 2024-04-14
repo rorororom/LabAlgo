@@ -6,6 +6,6 @@
 #include "testing/testing.h"
 
 int main() {
-    testing("array_tests", HeapInsertion, "heapInsertion", 100000, 1000000, 100000);
-    testing("array_tests", HeapLine,      "heapLine",      100000, 1000000, 100000);
+    testing("array_tests", BuildHeapLinearly,    "BuildHeapLinearly",    100000, 1000000, 100000);
+    testing("array_tests", BuildHeapByInsertion, "BuildHeapByInsertion", 100000, 1000000, 100000);
 }
