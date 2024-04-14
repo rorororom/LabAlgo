@@ -15,9 +15,9 @@ typedef struct {
     int size;
 } Heap;
 
-void HeapLine(int* arr, size_t n);
+void HeapLine     (int* arr, size_t n);
 void HeapInsertion(int* arr, size_t n);
 
-Heap* initHeap(size_t capacity);
+void Swap(int* arr, size_t index1, size_t index2);
 
 #endif

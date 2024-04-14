@@ -4,7 +4,7 @@ CXXFLAGS =  -D _DEBUG -ggdb3 -std=c11
 COMMON_DIR = sorts
 TESTING_DIR = testing
 SOURCES = main.c
-OUT_SOURCES = heap_line.c heap_insertion.c
+OUT_SOURCES = heap/heap_line.c heap/heap_insertion.c
 OUT_SOURCES_TEST = testing/testing.c
 OBJECTS = $(SOURCES:%.cpp=%.o)
 OUT_OBJECTS = $(OUT_SOURCES:$(COMMON_DIR)/%.cpp=%.o)

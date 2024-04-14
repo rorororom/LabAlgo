@@ -3,7 +3,7 @@
 
 #include "common.h"
 
-void sift_down(int* arr, int n, int index) {
+void SiftDown(int* arr, int n, int index) {
     assert(arr);
     assert(n     >= 0);
     assert(index >= 0);
@@ -21,23 +21,15 @@ void sift_down(int* arr, int n, int index) {
             break;
         }
 
-        int temp = arr[index];
-        arr[index] = arr[smallest];
-        arr[smallest] = temp;
+        Swap(arr, index, smallest);
 
         index = smallest;
     }
 }
 
-void build_heap(int* arr, int n) {
-    assert(arr);
-
-    for (int i = n / 2; i >= 0; --i) {
-        sift_down(arr, n, i);
-    }
-}
-
 void HeapLine(int* arr, size_t n) {
     assert(arr);
-    build_heap(arr, n);
+    for (int i = n / 2; i >= 0; --i) {
+        SiftDown(arr, n, i);
+    }
 }
