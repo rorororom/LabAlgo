@@ -1,7 +1,7 @@
 #include <assert.h>
 #include <stdio.h>
 
-#include "common.h"
+#include "heap_build.h"
 
 void SiftDown(int* arr, int n, int index) {
     assert(arr);
@@ -21,7 +21,7 @@ void SiftDown(int* arr, int n, int index) {
             break;
         }
 
-        Swap(arr, index, smallest);
+        Swap(&arr[index], &arr[smallest], sizeof(int));
 
         index = smallest;
     }

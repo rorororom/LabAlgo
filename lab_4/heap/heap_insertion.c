@@ -2,14 +2,23 @@
 #include <stdlib.h>
 #include <stdio.h>
 
-#include "common.h"
+#include "heap_build.h"
 
-void Swap(int* arr, size_t index1, size_t index2) {
-    assert(arr != NULL);
+void Swap(void* a, void* b, size_t size) {
+    assert(a);
+    assert(b);
+    uint8_t* ptr_a = (uint8_t*)a;
+    uint8_t* ptr_b = (uint8_t*)b;
 
-    int temp    = arr[index1];
-    arr[index1] = arr[index2];
-    arr[index2] = temp;
+    uint64_t tmp64 = 0;
+    uint32_t tmp32 = 0;
+    uint16_t tmp16 = 0;
+    uint8_t  tmp8  = 0;
+
+    SWAP(uint64_t, tmp64);
+    SWAP(uint32_t, tmp32);
+    SWAP(uint16_t, tmp16);
+    SWAP(uint8_t, tmp8);
 }
 
 int ParentIndex(size_t index) {
@@ -20,7 +29,7 @@ void SiftUp(int* arr, size_t index) {
     assert(arr);
 
     while (index > 0 && arr[index] < arr[ParentIndex(index)]) {
-        Swap(arr, index, ParentIndex(index));
+        Swap(&arr[index], &arr[ParentIndex(index)], sizeof(int));
         index = ParentIndex(index);
     }
 }

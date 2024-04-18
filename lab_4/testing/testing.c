@@ -6,7 +6,9 @@
 
 #include "testing.h"
 
-float CallingSortAndRecordingTime(int* arr, int i, HeapFunction heapFunc) {
+#define PATH_MAX 256
+
+float CallingFuncAndRecordingTime(int* arr, int i, HeapFunction heapFunc) {
     clock_t start_time, end_time;
 
     start_time = clock();
@@ -17,8 +19,8 @@ float CallingSortAndRecordingTime(int* arr, int i, HeapFunction heapFunc) {
 
 void testing(const char *testFolder, HeapFunction heapFunc,
              const char *nameFileForTime, size_t from, size_t to, size_t step) {
-    char filename[256];
-    char filename_ans[256];
+    char filename[PATH_MAX];
+    char filename_ans[PATH_MAX];
     int* arr = (int*)malloc(to * sizeof(int));
 
     assert(arr);
@@ -37,8 +39,8 @@ void testing(const char *testFolder, HeapFunction heapFunc,
             printf("Error opening input file: %s\n", filename);
             continue;
         }
-        for (size_t q = 0; q < i; q++) {
-            if (fscanf(file, "%d", &arr[q]) != 1) {
+        for (size_t currentIndex = 0; currentIndex < i; currentIndex++) {
+            if (fscanf(file, "%d", &arr[currentIndex]) != 1) {
                 printf("Error reading from file: %s\n", filename);
                 fclose(file);
                 continue;
@@ -46,7 +48,7 @@ void testing(const char *testFolder, HeapFunction heapFunc,
         }
         fclose(file);
 
-        float time = CallingSortAndRecordingTime(arr, i, heapFunc);
+        float time = CallingFuncAndRecordingTime(arr, i, heapFunc);
 
         fprintf(output_file, "%zu %f\n", i, time);
     }

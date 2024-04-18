@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-#include "heap/common.h"
+#include "heap/heap_build.h"
 #include "testing/testing.h"
 
 int main() {
