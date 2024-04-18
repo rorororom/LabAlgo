@@ -13,5 +13,5 @@ mkdir $dir_name
 
 for ((i=from;i<=to;i+=step))
 do
-    ./generator/gener $i $MAX_RND $type> ./$dir_name/${name}.in
+    ./generator/gener 1000000 10 $type> ./$dir_name/${name}.in
 done

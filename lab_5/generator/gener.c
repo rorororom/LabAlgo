@@ -14,10 +14,11 @@ void generate_random_unsigned_int(int limit, int size) {
 
 void generate_random_float(float limit, int size) {
     for (int i = 0; i < size; i++) {
-        float random_number = ((float)rand() / (float)RAND_MAX) * limit;
+        float random_number = ((float)rand() / (float)RAND_MAX) * (2 * limit) - limit;
         printf("%f\n", random_number);
     }
 }
+
 
 void generate_random_string(int size) {
     for (int i = 0; i < size; i++) {

@@ -37,11 +37,18 @@ int main() {
     int collisions_mantissa[MODULE] = {0};
     int collisions_exponent[MODULE] = {0};
     int collisions_mantissa_times_exponent[MODULE] = {0};
+    int collisions_bitwise[MODULE] = {0};
 
     // Тестирование хэш-функции для целочисленного представления числа
     for (int i = 0; i < num_numbers; i++) {
         int index = hash_int_representation(numbers[i]);
         collisions_int_representation[index]++;
+    }
+
+    // Тестирование хэш-функции битового представления
+    for (int i = 0; i < num_numbers; i++) {
+        int index = hash_float_bitwise(numbers[i]);
+        collisions_bitwise[index]++;
     }
 
     // Тестирование хэш-функции для мантиссы числа
@@ -66,6 +73,12 @@ int main() {
     FILE *file_int_representation = fopen("res/collisions_bit_representation_float.txt", "w");
     for (int i = 0; i < MODULE; i++) {
         fprintf(file_int_representation, "%d %d\n", i, collisions_int_representation[i]);
+    }
+    fclose(file_int_representation);
+
+    FILE *file_bitwise = fopen("res/collisions_bitwise_float.txt", "w");
+    for (int i = 0; i < MODULE; i++) {
+        fprintf(file_bitwise, "%d %d\n", i, collisions_bitwise[i]);
     }
     fclose(file_int_representation);
 
