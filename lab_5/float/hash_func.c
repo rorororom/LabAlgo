@@ -1,54 +1,76 @@
+#include <stdint.h>
+#include <stdio.h>
+
 #define MODULE 1000
 
 //Битовое представление
 unsigned int hash_int_representation(float key) {
     unsigned int int_representation = *(unsigned int*)&key;
 
-    return int_representation % MODULE;
+    long long result = 0;
+    unsigned int base = 1;
+    while (int_representation > 0 && base < 10000) {
+        if (int_representation % 2 == 1) {
+            result += base * 1;
+        }
+        base *= 10;
+        int_representation  /= 2;
+    }
+
+    return (int)(result % MODULE);
 }
 
 
 unsigned int hash_float_bitwise(float key) {
-    if (key == 0.0f) // Добавляем проверку на случай, если key равно 0
+    if (key == 0.0f)
         return 0;
 
-    unsigned int result = 0;
-    int shift = 0;
+    uint32_t *ptr = (uint32_t *)&key;
+    uint32_t bits = *ptr;
 
-    unsigned int key_as_int = *(unsigned int *)&key; // Преобразуем float в его битовое представление
-
-    while (key_as_int > 0) {
-        unsigned int bit = key_as_int % 2; // Определение текущего бита
-        result |= bit << shift; // Установка бита в результате
-        key_as_int /= 2;
-        shift++; // Увеличение сдвига
+    int result = 0;
+    int base = 1;
+    for (int i = 31; i >= 29; i--) {
+        result += ((bits >> i) & 1) * base;
+        base *= 10;
     }
 
-    return result % MODULE;
+    return result;
 }
 
+typedef union {
+  float f;
+  struct {
+    unsigned int mantissa : 23;
+    unsigned int exponent : 8;
+    unsigned int sign : 1;
+  } parts;
+} float_cast;
 
 // Извлечение мантиссы
-unsigned int hash_mantissa(unsigned int key, unsigned int table_size) {
-    unsigned int mantissa_mask = 0x007FFFFF;
-    unsigned int mantissa = key & mantissa_mask;
-    return mantissa % MODULE;
+unsigned int hash_mantissa(float key, unsigned int table_size) {
+    float_cast data;
+    data.f = key;
+    return data.parts.mantissa % MODULE;
 }
 
+int cnt = 0;
 // Извлечение экспоненты
-unsigned int hash_exponent(unsigned int key, unsigned int table_size) {
-    unsigned int exponent_mask = 0x7F800000;
-    unsigned int exponent = (key & exponent_mask) >> 23;
-    return exponent % MODULE;
+unsigned int hash_exponent(float key, unsigned int table_size) {
+    float_cast data;
+    data.f = key;
+    int ans = data.parts.exponent % 1000;
+    if (cnt < 10) {
+        printf("%f %d\n", key, ans);
+        cnt++;
+    }
+    return ans;
 }
 
 // Произведение мантиссы на экспоненту.
-unsigned int hash_mantissa_times_exponent(unsigned int key, unsigned int table_size) {
-    unsigned int mantissa_mask = 0x007FFFFF;
-    unsigned int mantissa = key & mantissa_mask;
-
-    unsigned int exponent_mask = 0x7F800000;
-    unsigned int exponent = (key & exponent_mask) >> 23;
+unsigned int hash_mantissa_times_exponent(float key, unsigned int table_size) {
+    unsigned int mantissa = hash_mantissa(key, table_size);
+    unsigned int exponent = hash_exponent(key, table_size);
 
     return (mantissa * exponent) % MODULE;
 }
