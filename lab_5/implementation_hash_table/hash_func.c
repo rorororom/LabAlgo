@@ -2,17 +2,14 @@
 #include <math.h>
 #include <assert.h>
 
-int hash_multiplication(int key, struct HashTable* ht) {
-    assert(ht);
-    double A = 0.618033;
-    int h = (int)(((long double)(ht->length) * fmod(key * A, 1))) % (int)(ht->length);
+int hash_multiplication(int key, int length) {
+    double A = 0.618033; // константа предложена Кнутом (см. Томас Кормен стр. 296)
+    int h = (int)(((long double)(length) * fmod(key * A, 1))) % (int)(length);
 
     return h;
 }
 
-int hash_bitwise(int key, struct HashTable* ht) {
-    assert(ht);
-
+int hash_bitwise(int key, int length) {
     if (key == 0)
         return 0;
 
@@ -26,12 +23,10 @@ int hash_bitwise(int key, struct HashTable* ht) {
         shift++;
     }
 
-    return (int)(result % ht->length);
+    return (int)(result % length);
 }
 
 
-int hash_remainder(int key, struct HashTable* ht) {
-    assert(ht);
-    
-    return key % ht->length;
+int hash_remainder(int key, int length) {
+    return key % length;
 }

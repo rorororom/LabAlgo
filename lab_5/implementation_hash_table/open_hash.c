@@ -83,7 +83,7 @@ void CheckAndRehash(struct HashTable* ht) {
 void HT_InsertLinear(int key, HashTable* ht) {
     assert(ht);
 
-    int index = hash_multiplication(key, ht);
+    int index = hash_multiplication(key, ht->length);
 
     while (ht->table[index].status == OCCUPIED) {
         index = (index + 1) % ht->length;
@@ -100,7 +100,7 @@ void HT_InsertLinear(int key, HashTable* ht) {
 void HT_InsertSquare(int key, HashTable* ht) {
     assert(ht);
 
-    int index = hash_multiplication(key, ht);
+    int index = hash_multiplication(key, ht->length);
     int i = 1;
 
     while (ht->table[index].status == OCCUPIED) {
@@ -118,9 +118,9 @@ void HT_InsertSquare(int key, HashTable* ht) {
 void HT_InsertTwoHash(int key, HashTable* ht) {
     assert(ht);
 
-    int index = hash_multiplication(key, ht);
+    int index = hash_multiplication(key, ht->length);
     int i = 1;
-    int h2 = hash_remainder(key, ht);
+    int h2 = hash_remainder(key, ht->length);
 
     while (ht->table[index].status == OCCUPIED) {
         index = (index + i * h2) % ht->length;
@@ -141,7 +141,7 @@ void HT_InsertTwoHash(int key, HashTable* ht) {
 int HT_SearchLinear(int key, struct HashTable* ht) {
     assert(ht);
 
-    int index = hash_multiplication(key, ht);
+    int index = hash_multiplication(key, ht->length);
     int originalIndex = index;
     int count = 0;
 
@@ -162,7 +162,7 @@ int HT_SearchLinear(int key, struct HashTable* ht) {
 int HT_SearchQuadratic(int key, struct HashTable* ht) {
     assert(ht);
 
-    int index = hash_multiplication(key, ht);
+    int index = hash_multiplication(key, ht->length);
     int i = 1;
     int originalIndex = index;
 
@@ -183,7 +183,7 @@ int HT_SearchQuadratic(int key, struct HashTable* ht) {
 int HT_SearchDoubleHashing(int key, struct HashTable* ht) {
     assert(ht);
 
-    int index = hash_multiplication(key, ht);
+    int index = hash_multiplication(key, ht->length);
     int originalIndex = index;
     int count = 0;
 
@@ -191,7 +191,7 @@ int HT_SearchDoubleHashing(int key, struct HashTable* ht) {
         if (ht->table[index].key == key && ht->table[index].status == OCCUPIED) {
             return index;
         }
-        int h2 = hash_remainder(key, ht);
+        int h2 = hash_remainder(key, ht->length);
         index = (index + h2) % ht->length;
         count++;
         if (index == originalIndex) {

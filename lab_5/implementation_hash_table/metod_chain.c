@@ -87,7 +87,7 @@ void HT_CH_Rehash(struct HashTable* ht) {
         Node* current_node = current_list->fixedElement;
 
         while (current_node != NULL) {
-            int new_hash = hash_multiplication(current_node->value, ht) % new_length;
+            int new_hash = hash_multiplication(current_node->value, ht->length) % new_length;
             LST_Add(&new_array[new_hash], current_node->value);
 
             current_node = current_node->next;
@@ -116,7 +116,7 @@ void RehashIfNeeded(struct HashTable* ht) {
 bool HT_CH_Search(int key, struct HashTable* ht) {
     assert(ht);
 
-    int hash = hash_multiplication(key, ht) % ht->length;
+    int hash = hash_multiplication(key, ht->length) % ht->length;
     List* list = &ht->array[hash];
     Node* current = list->fixedElement;
 
@@ -163,7 +163,7 @@ void HT_CH_Insert(int key, struct HashTable* ht) {
         return;
     }
 
-    int hash = hash_multiplication(key, ht) % ht->length;
+    int hash = hash_multiplication(key, ht->length) % ht->length;
 
     if (ht->array[hash].fixedElement == NULL) {
         LST_Add(&ht->array[hash], key);
@@ -193,7 +193,7 @@ void HT_CH_RemoveKey(int key, struct HashTable* ht) {
     if (!HT_CH_Search(key, ht))
         return;
 
-    int hash = hash_multiplication(key, ht) % ht->length;
+    int hash = hash_multiplication(key, ht->length) % ht->length;
     List* list = &ht->array[hash];
     Node* current = list->fixedElement;
     Node* prev = NULL;
