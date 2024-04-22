@@ -6,18 +6,19 @@ struct node {
     int flag_zero;
 };
 
-struct HashTable {
-    struct arrHash2* table;
-    int size;
+struct HashFuncData {
     int A;
     int B;
-    int P;
 };
 
-struct arrHash2 {
-    int A;
-    int B;
-    int P;
+struct HashTable {
+    struct HashData* table;
+    struct HashFuncData data;
+    int size;
+};
+
+struct HashData {
+    struct HashFuncData data;
     struct node* arr;
     int size;
 };
@@ -29,7 +30,7 @@ enum STATUS {
     ERROR
 };
 
-int HT_ID_Build(int* arr, int N, struct arrHash2* hashTable);
-bool HT_ID_Search(struct arrHash2* hashTable, int value);
+int HT_ID_Build(int* arr, int N, struct HashData* hashTable);
+bool HT_ID_Search(struct HashData* hashTable, int value);
 
 #endif

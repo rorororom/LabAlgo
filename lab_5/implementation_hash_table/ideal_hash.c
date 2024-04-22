@@ -8,6 +8,7 @@
 #include <string.h>
 
 #define SEARCH_ITERATIONS 10000000
+#define P_CONST           10000003
 
 #include "ideal_hash.h"
 
@@ -19,12 +20,10 @@ int GenerSizeHT(int N) {
     return power;
 }
 
-void HF_GenerCoeff(int* A, int* B, int* P, size_t size) {
+void HF_GenerCoeff(int* A, int* B, size_t size) {
     *A = rand() % size;
     *A = 2 * (*A) + 1;
     *B = rand() % size;
-    *P = rand() % size + size;
-    *P = 2 * (*P) + 1;
 }
 
 struct HashTable* HT_Ctor(size_t N) {
@@ -34,7 +33,7 @@ struct HashTable* HT_Ctor(size_t N) {
 
     hashTable->size = size;
 
-    HF_GenerCoeff(&hashTable->A, &hashTable->B, &hashTable->P, hashTable->size);
+    HF_GenerCoeff(&hashTable->data.A, &hashTable->data.B, hashTable->size);
     return hashTable;
 }
 
@@ -42,7 +41,7 @@ struct HashTable* HT_collizion(struct HashTable* HT, int* collizion) {
     struct HashTable* ht_collizion = (struct HashTable*)calloc(1, sizeof(struct HashTable));
     assert(ht_collizion);
 
-    ht_collizion->table = (struct arrHash2*)calloc(HT->size, sizeof(struct arrHash2));
+    ht_collizion->table = (struct HashData*)calloc(HT->size, sizeof(struct HashData));
     assert(ht_collizion->table);
 
     for (size_t i = 0; i < HT->size; i++) {
@@ -55,11 +54,14 @@ struct HashTable* HT_collizion(struct HashTable* HT, int* collizion) {
     }
 
     ht_collizion->size = HT->size;
-    ht_collizion->A = HT->A;
-    ht_collizion->B = HT->B;
-    ht_collizion->P = HT->P;
+    ht_collizion->data.A = HT->data.A;
+    ht_collizion->data.B = HT->data.B;
 
     return ht_collizion;
+}
+
+int HashFunc(int A, int B, int size, int key) {
+    return ((A * key + B) % P_CONST + P_CONST) % P_CONST % size;
 }
 
 void CalculateCollisions(int* arr, int** collizion, int N, struct HashTable* HT) {
@@ -68,7 +70,8 @@ void CalculateCollisions(int* arr, int** collizion, int N, struct HashTable* HT)
             int key = arr[i];
             if (key == 0)
                 continue;
-            int hashValue = ((HT->A * key + HT->B) % HT->P + HT->P) % HT->P % HT->size;
+
+            int hashValue = HashFunc(HT->data.A, HT->data.B, HT->size, key);
             (*collizion)[hashValue]++;
         }
 
@@ -85,7 +88,7 @@ void CalculateCollisions(int* arr, int** collizion, int N, struct HashTable* HT)
             (*collizion)[i] = 0;
         }
 
-        HF_GenerCoeff(&HT->A, &HT->B, &HT->P, HT->size);
+        HF_GenerCoeff(&HT->data.A, &HT->data.B, HT->size);
     }
 }
 
@@ -94,18 +97,15 @@ void UpdateCollizion(struct HashTable* ht_collizion, int* arr, int N, int* colli
         int key = arr[i];
         if (key == 0)
             continue;
-        int hashValue = ((ht_collizion->A * key + ht_collizion->B) % ht_collizion->P + ht_collizion->P) % ht_collizion->P % ht_collizion->size;
+
+        int hashValue = HashFunc(ht_collizion->data.A, ht_collizion->data.B, ht_collizion->size, key);
         ht_collizion->table[hashValue].arr[ht_collizion->table[hashValue].size].value = key;
         ht_collizion->table[hashValue].size++;
     }
 }
 
-int HashFunc(struct arrHash2* ht, int key) {
-    return ((ht->A * key + ht->B) % ht->P + ht->P) % ht->P % ht->size;
-}
-
 void UpdateHT(struct HashTable* HT, int* collizion) {
-    HT->table = (struct arrHash2*)calloc(HT->size, sizeof(struct arrHash2));
+    HT->table = (struct HashData*)calloc(HT->size, sizeof(struct HashData));
     for (size_t i = 0; i < HT->size; i++) {
         HT->table[i].size = collizion[i] * collizion[i];
         if (HT->table[i].size == 0) {
@@ -116,10 +116,10 @@ void UpdateHT(struct HashTable* HT, int* collizion) {
     }
 }
 
-void BuildCorrectHashFunc2(struct HashTable* HT, struct HashTable* HT_collizion, int* arr) {
+void BuildCorrectHashTable(struct HashTable* HT, struct HashTable* HT_collizion, int* arr) {
     for (size_t i = 0; i < HT->size; i++) {
         if (HT->table[i].size > 0) {
-            HF_GenerCoeff(&HT->table[i].A, &HT->table[i].B, &HT->table[i].P, HT->table[i].size);
+            HF_GenerCoeff(&HT->table[i].data.A, &HT->table[i].data.B, HT->table[i].size);
         }
 
         struct node* temp_arr = (struct node*)calloc(HT->table[i].size, sizeof(struct node));
@@ -129,10 +129,10 @@ void BuildCorrectHashFunc2(struct HashTable* HT, struct HashTable* HT_collizion,
             if (key == 0)
                 continue;
 
-            int hashValue = ((HT->table[i].A * key + HT->table[i].B) % HT->table[i].P + HT->table[i].P) % HT->table[i].P % HT->size;
+            int hashValue = HashFunc(HT->table[i].data.A,  HT->table[i].data.B, HT->size, key);
 
             if (temp_arr[hashValue].value != 0) {
-                HF_GenerCoeff(&HT->table[i].A, &HT->table[i].B, &HT->table[i].P, HT->table[i].size);
+                HF_GenerCoeff(&HT->table[i].data.A, &HT->table[i].data.B, HT->table[i].size);
                 for (size_t k = 0; k < HT->table[i].size; k++) {
                     temp_arr[k].value = 0;
                 }
@@ -152,7 +152,7 @@ void BuildCorrectHashFunc2(struct HashTable* HT, struct HashTable* HT_collizion,
 }
 
 
-int HT_ID_Build(int* arr, int N, struct arrHash2* hashTable) {
+int HT_ID_Build(int* arr, int N, struct HashData* hashTable) {
     struct HashTable* HT = HT_Ctor(N);
 
     int* collizion = (int*)calloc(HT->size, sizeof(int));
@@ -166,7 +166,7 @@ int HT_ID_Build(int* arr, int N, struct arrHash2* hashTable) {
 
     UpdateHT(HT, collizion);
 
-    BuildCorrectHashFunc2(HT, ht_collizion, arr);
+    BuildCorrectHashTable(HT, ht_collizion, arr);
 
     free(ht_collizion);
     free(HT);
@@ -174,16 +174,15 @@ int HT_ID_Build(int* arr, int N, struct arrHash2* hashTable) {
 }
 
 
-bool HT_ID_Search(struct arrHash2* hashTable, int value) {
+bool HT_ID_Search(struct HashData* hashTable, int value) {
 
-    int hash1  = ((hashTable->A * value + hashTable->B) % hashTable->P + hashTable->P) % hashTable->P % hashTable->size;
+    int hash1 = HashFunc(hashTable->data.A, hashTable->data.B, hashTable->size, value);
 
     if (hashTable[hash1].arr == NULL) {
         return false;
     }
 
-    int A2 = hashTable[hash1].A, B2 = hashTable[hash1].B, P2= hashTable[hash1].P;
-    int hash2 = ((A2 * value + B2) % P2 + P2) % P2 % hashTable[hash1].size;
+    int hash2 = HashFunc(hashTable[hash1].data.A, hashTable[hash1].data.B, hashTable->size, value);
 
     if (hashTable[hash1].arr[hash2].value == value )
         return true;

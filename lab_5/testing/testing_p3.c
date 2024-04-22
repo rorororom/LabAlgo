@@ -11,7 +11,7 @@
 #include "../implementation_hash_table/ideal_hash.h"
 // #include "../relizing_hash_table/metod_chain.h"
 
-void testing(struct arrHash2* ht) {
+void testing(struct HashData* ht) {
 
     for (int i = 0; i < SEARCH_ITERATIONS; i++) {
         int target = rand() % (NUMBERS_TO_READ * 10);
@@ -43,7 +43,7 @@ int main() {
 
     fclose(file);
 
-    struct arrHash2* ht = (struct arrHash2*)calloc(SEARCH_ITERATIONS, sizeof(struct arrHash2));
+    struct HashData* ht = (struct HashData*)calloc(SEARCH_ITERATIONS, sizeof(struct HashData));
     assert(ht);
 
     build_HT(arr, ht);
