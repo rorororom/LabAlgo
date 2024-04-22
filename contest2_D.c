@@ -5,6 +5,8 @@
 #include <time.h>
 #include <string.h>
 
+#define P_CONST 10000003
+
 #define CHECK_SCANF_D(res, input, var, message, status) \
     res = fscanf(input, "%d", var);                     \
     if (res != 1) {                                     \
@@ -19,24 +21,24 @@
         return status;                                  \
     }
 
-
 struct node {
     int value;
     int flag_zero;
 };
 
-struct HashTable {
-    struct HashData* table;
-    int size;
+struct HashFuncData {
     int A;
     int B;
-    int P;
+};
+
+struct HashTable {
+    struct HashData* table;
+    struct HashFuncData data;
+    int size;
 };
 
 struct HashData {
-    int A;
-    int B;
-    int P;
+    struct HashFuncData data;
     struct node* arr;
     int size;
 };
@@ -65,15 +67,12 @@ int GenerSizeHT(int N) {
  * Генерирует случайные коэффициенты A, B, P для хэш-таблицы.
  * @param A - коэффициент A
  * @param B - коэффициент B
- * @param P - коэффициент P
  * @param size - размер хэш-таблицы
  */
-void HF_GenerCoeff(int* A, int* B, int* P, size_t size) {
+void HF_GenerCoeff(int* A, int* B, size_t size) {
     *A = rand() % size;
     *A = 2 * (*A) + 1;
     *B = rand() % size;
-    *P = rand() % size + size;
-    *P = 2 * (*P) + 1;
 }
 
 /**
@@ -81,7 +80,6 @@ void HF_GenerCoeff(int* A, int* B, int* P, size_t size) {
  * @param N - количество элементов
  * @return указатель на созданную хэш-таблицу
  */
-
 struct HashTable* HT_Ctor(size_t N) {
     struct HashTable* hashTable = (struct HashTable*)calloc(1, sizeof(struct HashTable));
 
@@ -89,7 +87,7 @@ struct HashTable* HT_Ctor(size_t N) {
 
     hashTable->size = size;
 
-    HF_GenerCoeff(&hashTable->A, &hashTable->B, &hashTable->P, hashTable->size);
+    HF_GenerCoeff(&hashTable->data.A, &hashTable->data.B, hashTable->size);
     return hashTable;
 }
 
@@ -116,11 +114,21 @@ struct HashTable* HT_collizion(struct HashTable* HT, int* collizion) {
     }
 
     ht_collizion->size = HT->size;
-    ht_collizion->A = HT->A;
-    ht_collizion->B = HT->B;
-    ht_collizion->P = HT->P;
+    ht_collizion->data.A = HT->data.A;
+    ht_collizion->data.B = HT->data.B;
 
     return ht_collizion;
+}
+
+/**
+ * Обновляет переменные A B с учетом коллизий.
+ * @param A    - коэффициент A
+ * @param B    - коэффициент B
+ * @param size - размер
+ * @param key  - ключ
+ */
+int HashFunc(int A, int B, int size, int key) {
+    return ((A * key + B) % P_CONST + P_CONST) % P_CONST % size;
 }
 
 /**
@@ -136,7 +144,8 @@ void CalculateCollisions(int* arr, int** collizion, int N, struct HashTable* HT)
             int key = arr[i];
             if (key == 0)
                 continue;
-            int hashValue = ((HT->A * key + HT->B) % HT->P + HT->P) % HT->P % HT->size;
+
+            int hashValue = HashFunc(HT->data.A, HT->data.B, HT->size, key);
             (*collizion)[hashValue]++;
         }
 
@@ -153,7 +162,7 @@ void CalculateCollisions(int* arr, int** collizion, int N, struct HashTable* HT)
             (*collizion)[i] = 0;
         }
 
-        HF_GenerCoeff(&HT->A, &HT->B, &HT->P, HT->size);
+        HF_GenerCoeff(&HT->data.A, &HT->data.B, HT->size);
     }
 }
 
@@ -164,26 +173,18 @@ void CalculateCollisions(int* arr, int** collizion, int N, struct HashTable* HT)
  * @param N - количество элементов
  * @param collizion - массив коллизий
  */
-
 void UpdateCollizion(struct HashTable* ht_collizion, int* arr, int N, int* collizion) {
     for (int i = 0; i < N; i++) {
         int key = arr[i];
         if (key == 0)
             continue;
-        int hashValue = ((ht_collizion->A * key + ht_collizion->B) % ht_collizion->P + ht_collizion->P) % ht_collizion->P % ht_collizion->size;
+
+        int hashValue = HashFunc(ht_collizion->data.A, ht_collizion->data.B, ht_collizion->size, key);
         ht_collizion->table[hashValue].arr[ht_collizion->table[hashValue].size].value = key;
         ht_collizion->table[hashValue].size++;
     }
 }
 
-/**
- * Обновляет хэш-таблицу с учетом коллизий.
- * @param ht - массив второго уровня хэщ-таблицы
- * @param key - ключ
- */
-int HashFunc(struct HashData* ht, int key) {
-    return ((ht->A * key + ht->B) % ht->P + ht->P) % ht->P % ht->size;
-}
 
 /**
  * Обновляет хэш-таблицу с учетом коллизий.
@@ -208,10 +209,10 @@ void UpdateHT(struct HashTable* HT, int* collizion) {
  * @param HT_collizion - хэш-таблица с учетом коллизий
  * @param arr - исходный массив элементов
  */
-void BuildCorrectHashFunc2(struct HashTable* HT, struct HashTable* HT_collizion, int* arr) {
+void BuildCorrectHashTable(struct HashTable* HT, struct HashTable* HT_collizion, int* arr) {
     for (size_t i = 0; i < HT->size; i++) {
         if (HT->table[i].size > 0) {
-            HF_GenerCoeff(&HT->table[i].A, &HT->table[i].B, &HT->table[i].P, HT->table[i].size);
+            HF_GenerCoeff(&HT->table[i].data.A, &HT->table[i].data.B, HT->table[i].size);
         }
 
         struct node* temp_arr = (struct node*)calloc(HT->table[i].size, sizeof(struct node));
@@ -221,10 +222,10 @@ void BuildCorrectHashFunc2(struct HashTable* HT, struct HashTable* HT_collizion,
             if (key == 0)
                 continue;
 
-            int hashValue = ((HT->table[i].A * key + HT->table[i].B) % HT->table[i].P + HT->table[i].P) % HT->table[i].P % HT->size;
+            int hashValue = HashFunc(HT->table[i].data.A,  HT->table[i].data.B, HT->size, key);
 
             if (temp_arr[hashValue].value != 0) {
-                HF_GenerCoeff(&HT->table[i].A, &HT->table[i].B, &HT->table[i].P, HT->table[i].size);
+                HF_GenerCoeff(&HT->table[i].data.A, &HT->table[i].data.B, HT->table[i].size);
                 for (size_t k = 0; k < HT->table[i].size; k++) {
                     temp_arr[k].value = 0;
                 }
@@ -341,7 +342,7 @@ int main() {
 
     UpdateHT(HT, collizion);
 
-    BuildCorrectHashFunc2(HT, ht_collizion, arr);
+    BuildCorrectHashTable(HT, ht_collizion, arr);
 
     res = ProcessCommands(HT, flagZero, input, output);
     if (res)
