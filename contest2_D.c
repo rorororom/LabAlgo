@@ -5,20 +5,35 @@
 #include <time.h>
 #include <string.h>
 
+#define CHECK_SCANF_D(res, input, var, message, status) \
+    res = fscanf(input, "%d", var);                     \
+    if (res != 1) {                                     \
+        fprintf(output, "%s", message);                 \
+        return status;                                  \
+    }
+
+#define CHECK_SCANF_S(res, input, var, message, status) \
+    res = fscanf(input, "%s", var);                     \
+    if (res != 1) {                                     \
+        fprintf(output, "%s", message);                 \
+        return status;                                  \
+    }
+
+
 struct node {
     int value;
     int flag_zero;
 };
 
 struct HashTable {
-    struct arrHash2* table;
+    struct HashData* table;
     int size;
     int A;
     int B;
     int P;
 };
 
-struct arrHash2 {
+struct HashData {
     int A;
     int B;
     int P;
@@ -33,38 +48,26 @@ enum STATUS {
     ERROR
 };
 
+/**
+ * Генерирует размер хэш-таблицы, который является ближайшей к степени двойки сверху для данного N.
+ * @param N - количество элементов
+ * @return ближайшая к степени двойки сверху размер хэш-таблицы
+ */
 int GenerSizeHT(int N) {
     int power = 1;
     while (power <= N) {
-        power *= 2;
+        power = power << 1;
     }
     return power;
 }
 
-status_t ReadData(int** arr, int* N, bool* flagZero) {
-    int res = scanf("%d", N);
-    if (res != 1) {
-        printf("не считался размер\n");
-        return ERROR;
-    }
-
-    *arr = (int*)calloc(*N, sizeof(int));
-
-    for (size_t i = 0; i < *N; i++) {
-        int res = scanf("%d", &((*arr)[i]));
-        if (res != 1) {
-            printf("не считался размер\n");
-            return ERROR;
-        }
-
-        if((*arr)[i] == 0) {
-            *flagZero = true;
-        }
-    }
-
-    return OK;
-}
-
+/**
+ * Генерирует случайные коэффициенты A, B, P для хэш-таблицы.
+ * @param A - коэффициент A
+ * @param B - коэффициент B
+ * @param P - коэффициент P
+ * @param size - размер хэш-таблицы
+ */
 void HF_GenerCoeff(int* A, int* B, int* P, size_t size) {
     *A = rand() % size;
     *A = 2 * (*A) + 1;
@@ -72,6 +75,12 @@ void HF_GenerCoeff(int* A, int* B, int* P, size_t size) {
     *P = rand() % size + size;
     *P = 2 * (*P) + 1;
 }
+
+/**
+ * Создает хэш-таблицу с указанным размером.
+ * @param N - количество элементов
+ * @return указатель на созданную хэш-таблицу
+ */
 
 struct HashTable* HT_Ctor(size_t N) {
     struct HashTable* hashTable = (struct HashTable*)calloc(1, sizeof(struct HashTable));
@@ -84,11 +93,17 @@ struct HashTable* HT_Ctor(size_t N) {
     return hashTable;
 }
 
+/**
+ * Создает хэш-таблицу с учетом коллизий.
+ * @param HT - исходная хэш-таблица
+ * @param collizion - массив коллизий
+ * @return указатель на созданную хэш-таблицу с учетом коллизий
+ */
 struct HashTable* HT_collizion(struct HashTable* HT, int* collizion) {
     struct HashTable* ht_collizion = (struct HashTable*)calloc(1, sizeof(struct HashTable));
     assert(ht_collizion);
 
-    ht_collizion->table = (struct arrHash2*)calloc(HT->size, sizeof(struct arrHash2));
+    ht_collizion->table = (struct HashData*)calloc(HT->size, sizeof(struct HashData));
     assert(ht_collizion->table);
 
     for (size_t i = 0; i < HT->size; i++) {
@@ -108,6 +123,13 @@ struct HashTable* HT_collizion(struct HashTable* HT, int* collizion) {
     return ht_collizion;
 }
 
+/**
+ * Вычисляет коллизии для элементов исходного массива исходной хэш-таблицы.
+ * @param arr - исходный массив элементов
+ * @param collizion - массив коллизий
+ * @param N - количество элементов
+ * @param HT - исходная хэш-таблица
+ */
 void CalculateCollisions(int* arr, int** collizion, int N, struct HashTable* HT) {
     while (true) {
         for (int i = 0; i < N; i++) {
@@ -135,6 +157,14 @@ void CalculateCollisions(int* arr, int** collizion, int N, struct HashTable* HT)
     }
 }
 
+/**
+ * Обновляет хэш-таблицу с учетом коллизий.
+ * @param ht_collizion - хэш-таблица с учетом коллизий
+ * @param arr - исходный массив элементов
+ * @param N - количество элементов
+ * @param collizion - массив коллизий
+ */
+
 void UpdateCollizion(struct HashTable* ht_collizion, int* arr, int N, int* collizion) {
     for (int i = 0; i < N; i++) {
         int key = arr[i];
@@ -146,12 +176,22 @@ void UpdateCollizion(struct HashTable* ht_collizion, int* arr, int N, int* colli
     }
 }
 
-int HashFunc(struct arrHash2* ht, int key) {
+/**
+ * Обновляет хэш-таблицу с учетом коллизий.
+ * @param ht - массив второго уровня хэщ-таблицы
+ * @param key - ключ
+ */
+int HashFunc(struct HashData* ht, int key) {
     return ((ht->A * key + ht->B) % ht->P + ht->P) % ht->P % ht->size;
 }
 
+/**
+ * Обновляет хэш-таблицу с учетом коллизий.
+ * @param HT - исходная хэш-таблица
+ * @param collizion - массив коллизий
+ */
 void UpdateHT(struct HashTable* HT, int* collizion) {
-    HT->table = (struct arrHash2*)calloc(HT->size, sizeof(struct arrHash2));
+    HT->table = (struct HashData*)calloc(HT->size, sizeof(struct HashData));
     for (size_t i = 0; i < HT->size; i++) {
         HT->table[i].size = collizion[i] * collizion[i];
         if (HT->table[i].size == 0) {
@@ -162,6 +202,12 @@ void UpdateHT(struct HashTable* HT, int* collizion) {
     }
 }
 
+/**
+ * Строит корректную хэш-функцию для хэш-таблицы с учетом коллизий (2 уровень).
+ * @param HT - исходная хэш-таблица
+ * @param HT_collizion - хэш-таблица с учетом коллизий
+ * @param arr - исходный массив элементов
+ */
 void BuildCorrectHashFunc2(struct HashTable* HT, struct HashTable* HT_collizion, int* arr) {
     for (size_t i = 0; i < HT->size; i++) {
         if (HT->table[i].size > 0) {
@@ -197,63 +243,88 @@ void BuildCorrectHashFunc2(struct HashTable* HT, struct HashTable* HT_collizion,
     }
 }
 
-void ProcessCommands(struct HashTable* HT, bool flagZero) {
-    char command[10];
-    int res = scanf("%s", command);
-    if (res != 1) {
-        printf("не считался размер\n");
-        return;
+/**
+ * Считывает данные из ввода.
+ * @param arr - указатель на массив элементов
+ * @param N - указатель на количество элементов
+ * @param flagZero - указатель на флаг наличия элементов со значением 0
+ * @param input - файловый поток ввода
+ * @param output - файловый поток вывода
+ * @return статус выполнения
+ */
+status_t ReadData(int** arr, int* N, bool* flagZero, FILE* input, FILE* output) {
+    int res;
+    CHECK_SCANF_D(res, stdin, N, "не считался размер\n", ERROR)
+
+    *arr = (int*)calloc(*N, sizeof(int));
+
+    for (size_t i = 0; i < *N; i++) {
+        CHECK_SCANF_D(res, stdin, &((*arr)[i]), "не считался размер\n", ERROR)
+
+        if ((*arr)[i] == 0) {
+            *flagZero = true;
+        }
     }
+
+    return OK;
+}
+
+/**
+ * Обрабатывает команды для хэш-таблицы.
+ * @param HT - указатель на хэш-таблицу
+ * @param flagZero - флаг наличия элементов со значением 0
+ * @param input - файловый поток ввода
+ * @param output - файловый поток вывода
+ * @return статус выполнения
+ */
+status_t ProcessCommands(struct HashTable* HT, bool flagZero, FILE* input, FILE* output) {
+    char command[10];
+    int res;
+    CHECK_SCANF_S(res, input, command, "не считался размер\n", ERROR)
 
     while (command[0] != '.') {
         int value = atoi(command);
         if (value == 0) {
-            if(flagZero)
-                printf("YES\n");
+            if (flagZero)
+                fprintf(output, "YES\n");
             else
-                printf("NO\n");
+                fprintf(output, "NO\n");
 
-            int res = scanf("%s", command);
-            if (res != 1) {
-                printf("не считался размер\n");
-                return;
-            }
-            continue;
+            CHECK_SCANF_S(res, input, command, "не считалось значение\n", ERROR)
         }
 
         int hash1 = ((HT->A * value + HT->B) % HT->P + HT->P) % HT->P % HT->size;
         if (HT->table[hash1].arr == NULL) {
-            printf("NO\n");
+            fprintf(output, "NO\n");
 
-            int res = scanf("%s", command);
-            if (res != 1) {
-                printf("не считался размер\n");
-                return;
-            }
-
-            continue;
+            CHECK_SCANF_S(res, input, command, "не считалось значение\n", ERROR)
         }
 
         int hash2 = HashFunc(&HT->table[hash1], value);
         if (HT->table[hash1].arr[hash2].value == value) {
-            printf("YES\n");
+            fprintf(output, "YES\n");
         } else {
-            printf("NO\n");
+            fprintf(output, "NO\n");
         }
 
-        scanf("%s", command);
+        CHECK_SCANF_S(res, input, command, "не считалось значение\n", ERROR)
     }
+
+    return OK;
 }
+
 
 int main() {
     srand(time(NULL));
+    FILE* input  = stdin;
+    FILE* output = stdout;
 
     int N = 0;
     int* arr;
 
     bool flagZero = false;
 
-    status_t res = ReadData(&arr, &N, &flagZero);
+    status_t res = ReadData(&arr, &N, &flagZero, input, output);
     if (res)
         return 1;
 
@@ -272,10 +343,13 @@ int main() {
 
     BuildCorrectHashFunc2(HT, ht_collizion, arr);
 
-    ProcessCommands(HT, flagZero);
+    res = ProcessCommands(HT, flagZero, input, output);
+    if (res)
+        return 1;
 
     free(ht_collizion);
     free(HT);
+
     return 0;
 }
 
