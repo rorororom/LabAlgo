@@ -3,9 +3,18 @@
 #include <time.h>
 #include <assert.h>
 
-#include "../implementation_hash_table/open_hash.h"
+// #define METHOD_CHAIN
+#define OPEN_HASH
+
+#ifdef METHOD_CHAIN
+    #include "../implementation_hash_table/metod_chain.h"
+#endif
+#ifdef OPEN_HASH
+    #include "../implementation_hash_table/open_hash.h"
+    #endif
 
 #define INIT_CAPACITY 10000
+#define SIZE_TESTS    1000000
 
 void WriteResults(FILE* file, float load_factor, double time_taken) {
     assert(file);
@@ -26,13 +35,63 @@ void CloseFile(FILE* file) {
     fclose(file);
 }
 
-void InserKeysFromFile(FILE* data_file, struct HashTable* ht) {
-    assert(data_file);
+void InserKeysFromFile(int* data, struct HashTable* ht, int method) {
+    assert(data);
     assert(ht);
 
-    int key = 0;
-    for (size_t i = 0; i < 1000000; i++) {
-        int read_result = fscanf(data_file, "%d", &key);
+#ifdef OPEN_HASH
+    for (size_t i = 0; i < SIZE_TESTS; i++) {
+        // printf("%d ", i);
+        if (method == LINEAR)
+            HT_InsertLinear(data[i], ht);
+        else if (method == SQUARE)
+            HT_InsertSquare(data[i], ht);
+        else
+            HT_InsertTwoHash(data[i], ht);
+    }
+#endif
+
+#ifdef METHOD_CHAIN
+    for (size_t i = 0; i < SIZE_TESTS; i++) {
+        HT_CH_Insert(data[i], ht);
+    }
+#endif
+}
+
+#ifdef OPEN_HASH
+double MeasureInsertionTime(int* data, struct HashTable* ht, int method) {
+    assert(data);
+    assert(ht);
+
+    clock_t start = clock();
+    InserKeysFromFile(data, ht, method);
+    clock_t end = clock();
+
+    return ((double) (end - start)) / CLOCKS_PER_SEC;
+}
+#endif
+
+#ifdef METHOD_CHAIN
+double MeasureInsertionTime(int* data, struct HashTable* ht) {
+    assert(data);
+    assert(ht);
+
+    clock_t start = clock();
+    InserKeysFromFile(data, ht, 0);
+    clock_t end = clock();
+
+    return ((double) (end - start)) / CLOCKS_PER_SEC;
+}
+#endif
+
+int* ReadDataFromFile(const char* filename) {
+    FILE* data_file = OpenFile(filename, "r");
+
+    int* data = (int*)calloc(SIZE_TESTS, sizeof(int));
+    assert(data);
+
+    for (size_t i = 0; i < SIZE_TESTS; i++) {
+        int read_result = fscanf(data_file, "%d", &data[i]);
         if (read_result != 1) {
             if (feof(data_file)) {
                 break;
@@ -41,36 +100,43 @@ void InserKeysFromFile(FILE* data_file, struct HashTable* ht) {
                 exit(1);
             }
         }
-        HT_InsertSquare(key, ht);
     }
-}
 
-double MeasureInsertionTime(FILE* data_file, struct HashTable* ht) {
-    assert(data_file);
-    assert(ht);
-
-    clock_t start = clock();
-    InserKeysFromFile(data_file, ht);
-    clock_t end = clock();
-
-    return ((double) (end - start)) / CLOCKS_PER_SEC;
+    CloseFile(data_file);
+    return data;
 }
 
 int main() {
-    FILE* results_file = OpenFile("open_hash_line.txt", "w");
-    FILE* data_file    = OpenFile("data.txt", "r");
+    FILE* results_file = OpenFile("open_hash_twohash.txt", "w");
+    int* data = ReadDataFromFile("../arr_teste/coll.txt");
 
-    float load_factor = 1;
-    struct HashTable* ht = HT_Create("line", INIT_CAPACITY);
-    printf("len =%d\n", ht->length);
+    float load_factor = 0.1;
+    float cnt = 1.0;
+    while (load_factor < cnt) {
+#ifdef OPEN_HASH
+        struct HashTable* ht = HT_Create(TWO_HASH, (int)(SIZE_TESTS / load_factor));
+        double time_taken = MeasureInsertionTime(data, ht, LINEAR);
+#endif
 
-    double time_taken = MeasureInsertionTime(data_file, ht);
+#ifdef METHOD_CHAIN
+        struct HashTable* ht = HT_CH_Create((int)(SIZE_TESTS / load_factor));
+        double time_taken = MeasureInsertionTime(data, ht);
+#endif
 
-    WriteResults(results_file, load_factor, time_taken);
-    HT_Destroy(ht);
+        WriteResults(results_file, load_factor, time_taken);
+
+#ifdef OPEN_HASH
+        HT_Destroy(ht);
+#endif
+#ifdef METHOD_CHAIN
+        HT_CH_Destroy(ht);
+#endif
+        load_factor += 0.05;
+    }
 
     CloseFile(results_file);
-    CloseFile(data_file);
+    free(data);
 
     return 0;
 }
+

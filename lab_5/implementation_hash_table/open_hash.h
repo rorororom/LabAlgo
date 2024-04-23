@@ -1,6 +1,8 @@
 #ifndef OPEN_HASH_LINE_H
 #define OPEN_HASH_LINE_H
 
+#include <stdint.h>
+
 extern const int CNT_ELEMENT;
 
 enum STATUS {
@@ -14,14 +16,20 @@ typedef struct Entry{
     int key;
 } Entry;
 
+enum HASH_METHOD {
+    LINEAR,
+    SQUARE,
+    TWO_HASH
+};
+
 typedef struct HashTable{
     int length;
     int size;
     Entry* table;
-    char* hash_method;
+    uint8_t hash_method;
 } HashTable;
 
-struct HashTable* HT_Create (char* method, int init_size);
+struct HashTable* HT_Create(uint8_t method, int init_size);
 void              HT_Destroy(struct HashTable* ht);
 
 void HT_Rehash     (struct HashTable* ht, int new_length);

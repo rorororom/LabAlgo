@@ -9,6 +9,7 @@
 #include "hash_func.h"
 
 const int CNT_ELEMENT = 1000000;
+const float LOAD_FACTOR_HTC = 0.7; // Hash Table method Chain
 
 //====================================================================================
 //==================================CTOR_DTOR=========================================
@@ -49,7 +50,6 @@ void LST_Destroy(List* list) {
         current = next;
     }
 
-    free(list);
 }
 
 
@@ -58,13 +58,7 @@ void HT_CH_Destroy(struct HashTable* ht) {
 
     for (int i = 0; i < ht->length; ++i) {
         List* list = &ht->array[i];
-        Node* current = list->fixedElement;
-
-        while (current != NULL) {
-            Node* next = current->next;
-            free(current);
-            current = next;
-        }
+        LST_Destroy(list);
     }
 
     free(ht->array);
@@ -104,7 +98,7 @@ void RehashIfNeeded(struct HashTable* ht) {
     assert(ht);
 
     float load_factor = (float)ht->size / ht->length;
-    if (load_factor > 0.7) {
+    if (load_factor > LOAD_FACTOR_HTC) {
         HT_CH_Rehash(ht);
     }
 }
@@ -159,9 +153,11 @@ void LST_Add(struct List* list, int value) {
 void HT_CH_Insert(int key, struct HashTable* ht) {
     assert(ht);
 
-    if (!HT_CH_Search(key, ht)) {
+    if (HT_CH_Search(key, ht)) {
         return;
     }
+
+    // RehashIfNeeded(ht);
 
     int hash = hash_multiplication(key, ht->length) % ht->length;
 
@@ -179,8 +175,6 @@ void HT_CH_Insert(int key, struct HashTable* ht) {
         LST_Add(&ht->array[hash], key);
     }
     ht->size++;
-
-    RehashIfNeeded(ht);
 }
 
 //====================================================================================
