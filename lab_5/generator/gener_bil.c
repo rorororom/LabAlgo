@@ -9,7 +9,7 @@ void generate_random_numbers(int *array, int size) {
 }
 
 int main() {
-    int size = 1000000;
+    int size = 10000000;
     int *random_numbers = (int*)malloc(size * sizeof(int));
 
     srand(time(NULL));

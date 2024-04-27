@@ -9,7 +9,7 @@
 #include "hash_func.h"
 
 const int CNT_ELEMENT = 1000000;
-const float LOAD_FACTOR_HTC = 0.7; // Hash Table method Chain
+const float LOAD_FACTOR_HTC = 0.75; // Hash Table method Chain
 
 //====================================================================================
 //==================================CTOR_DTOR=========================================
@@ -38,6 +38,8 @@ struct HashTable* HT_CH_Create(int init_capacity) {
         ht->array[i] = *LST_Create();
     }
 
+    ht->coeff = HashGetCoeff(init_capacity);
+
     return ht;
 }
 
@@ -49,7 +51,6 @@ void LST_Destroy(List* list) {
         free(current);
         current = next;
     }
-
 }
 
 
@@ -61,8 +62,18 @@ void HT_CH_Destroy(struct HashTable* ht) {
         LST_Destroy(list);
     }
 
+    ht->coeff->A = 0;
+    ht->coeff->B = 0;
+    ht->coeff->P = 0;
+    ht->size = 0;
+    ht->length = 0;
     free(ht->array);
     free(ht);
+
+    ht->array = NULL;
+    ht = NULL;
+    //if (ht == NULL)
+        //printf("AAAA\n");
 }
 
 //====================================================================================
@@ -72,6 +83,7 @@ void HT_CH_Destroy(struct HashTable* ht) {
 void HT_CH_Rehash(struct HashTable* ht) {
     assert(ht);
 
+    // printf("da blyat\n");
     size_t new_length = ht->length * 2;
     List* new_array = (List*)calloc(new_length, sizeof(List));
     assert(new_array);
@@ -81,7 +93,7 @@ void HT_CH_Rehash(struct HashTable* ht) {
         Node* current_node = current_list->fixedElement;
 
         while (current_node != NULL) {
-            int new_hash = hash_multiplication(current_node->value, ht->length) % new_length;
+            int new_hash = HashFunc(ht->coeff, current_node->value, new_length) % new_length;
             LST_Add(&new_array[new_hash], current_node->value);
 
             current_node = current_node->next;
@@ -110,7 +122,7 @@ void RehashIfNeeded(struct HashTable* ht) {
 bool HT_CH_Search(int key, struct HashTable* ht) {
     assert(ht);
 
-    int hash = hash_multiplication(key, ht->length) % ht->length;
+    int hash = HashFunc(ht->coeff, key, ht->length) % ht->length;
     List* list = &ht->array[hash];
     Node* current = list->fixedElement;
 
@@ -154,12 +166,14 @@ void HT_CH_Insert(int key, struct HashTable* ht) {
     assert(ht);
 
     if (HT_CH_Search(key, ht)) {
+        // printf("a ");
         return;
     }
 
-    // RehashIfNeeded(ht);
+    RehashIfNeeded(ht);
+    // printf("d ");
 
-    int hash = hash_multiplication(key, ht->length) % ht->length;
+    int hash = HashFunc(ht->coeff, key, ht->length) % ht->length;
 
     if (ht->array[hash].fixedElement == NULL) {
         LST_Add(&ht->array[hash], key);
@@ -187,7 +201,7 @@ void HT_CH_RemoveKey(int key, struct HashTable* ht) {
     if (!HT_CH_Search(key, ht))
         return;
 
-    int hash = hash_multiplication(key, ht->length) % ht->length;
+    int hash = HashFunc(ht->coeff, key, ht->length) % ht->length;
     List* list = &ht->array[hash];
     Node* current = list->fixedElement;
     Node* prev = NULL;

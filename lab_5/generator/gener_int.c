@@ -4,30 +4,25 @@
 #include <stdbool.h>
 
 #define CNT_ELEMENT 100000
-#define MAX_NUMBER 1000000
+#define MAX_NUMBER 10000000
 
 void generate_numbers(int array[], int size) {
-    srand(time(NULL));
-
-    bool generated[MAX_NUMBER] = {false}; // Массив флагов для отслеживания сгенерированных чисел
-
-    for (int i = 0; i < size; ++i) {
-        int num;
-        do {
-            num = rand() % MAX_NUMBER; // Генерация случайного числа
-        } while (generated[num]); // Повторять, пока не будет сгенерировано уникальное число
-        array[i] = num;
-        generated[num] = true; // Пометить число как сгенерированное
+    for (int i = 0; i < CNT_ELEMENT; i++) {
+        printf("%d\n", i);
     }
 }
 
+void generate_random_number(int min, int max) {
+    for (int i = 0; i < MAX_NUMBER; i++) {
+        printf("%d\n", min + rand() / (RAND_MAX / (max - min + 1) + 1));
+    }
+}
+
+
 int main() {
     int numbers[CNT_ELEMENT];
-    generate_numbers(numbers, CNT_ELEMENT);
-    for (int i = 0; i < CNT_ELEMENT; ++i) {
-        printf("%d\n", numbers[i]);
-    }
-    printf("\n");
+    //generate_numbers(numbers, CNT_ELEMENT);
+    generate_random_number(0, 300000);
 
     return 0;
 }

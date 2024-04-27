@@ -2,11 +2,12 @@
 #define OPEN_HASH_LINE_H
 
 #include <stdint.h>
+#include <stdlib.h>
 
 extern const int CNT_ELEMENT;
 
 enum STATUS {
-    EMPTY = 0,
+    EMPTY = 1,
     DELETED,
     OCCUPIED
 };
@@ -22,12 +23,21 @@ enum HASH_METHOD {
     TWO_HASH
 };
 
+typedef struct Coeff {
+    int A;
+    int B;
+    int P;
+} Coeff;
+
 typedef struct HashTable{
     int length;
     int size;
     Entry* table;
+    Coeff* coeff;
     uint8_t hash_method;
 } HashTable;
+
+struct Coeff* HashGetCoeff(size_t size);
 
 struct HashTable* HT_Create(uint8_t method, int init_size);
 void              HT_Destroy(struct HashTable* ht);

@@ -2,189 +2,173 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <stdbool.h>
 #include <math.h>
 #include <time.h>
 #include <string.h>
 
-#define SEARCH_ITERATIONS 10000000
-#define P_CONST           10000003
 
 #include "ideal_hash.h"
 
-int GenerSizeHT(int N) {
+bool Coprime(int a, int b) {
+    while (b != 0) {
+        int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a == 1;
+}
+
+/**
+ * @brief Нахождение ближайшей меньшей степени двойки для заданного числа
+ * @param N Число, для которого нужно найти ближайшую меньшую степень двойки
+ * @return Ближайшая меньшая степень двойки
+ */
+int NearestLowerPowerOfTwo(int N) {
     int power = 1;
-    while (power <= N) {
-        power *= 2;
+    while (power < N) {
+        power <<= 1;
     }
     return power;
 }
 
-void HF_GenerCoeff(int* A, int* B, size_t size) {
-    *A = rand() % size;
-    *A = 2 * (*A) + 1;
-    *B = rand() % size;
+/**
+ * @brief Генерирует случайное число в заданном диапазоне.
+ *
+ * @param min Минимальное значение диапазона.
+ * @param max Максимальное значение диапазона.
+ * @return Случайное число в диапазоне [min, max].
+ */
+
+int GenerateA(int min, int max) {
+    double scaled = (double)rand() / RAND_MAX;
+    int res = (int)(scaled * (max - min + 1) + min);
+    return res;
 }
 
-struct HashTable* HT_Ctor(size_t N) {
-    struct HashTable* hashTable = (struct HashTable*)calloc(1, sizeof(struct HashTable));
-
-    int size = GenerSizeHT(N);
-
-    hashTable->size = size;
-
-    HF_GenerCoeff(&hashTable->data.A, &hashTable->data.B, hashTable->size);
-    return hashTable;
+int Hash(int key, int A, int B, int size) {
+    return ((A * key + B) % COEFF_P + COEFF_P) % COEFF_P % size;
 }
 
-struct HashTable* HT_collizion(struct HashTable* HT, int* collizion) {
-    struct HashTable* ht_collizion = (struct HashTable*)calloc(1, sizeof(struct HashTable));
-    assert(ht_collizion);
+void GenerateCoeff(int* A, int* B, int size) {
+    (*A) = GenerateA(3, COEFF_P);
+    (*B) = rand() %  size;
+};
 
-    ht_collizion->table = (struct HashData*)calloc(HT->size, sizeof(struct HashData));
-    assert(ht_collizion->table);
+// void GenerateSecondaryHashTable(struct HashTable* hashTable, int* collisions, int* arr, size_t N) {
+//
+// }
 
-    for (size_t i = 0; i < HT->size; i++) {
-        if (collizion[i] != 0) {
-            ht_collizion->table[i].arr = (struct node*)calloc(collizion[i], sizeof(struct node));
-            assert(ht_collizion->table[i].arr);
-        }
+void BuildHashTable(struct HashTable* hashTable, int* arr, int N) {
+    GenerateCoeff(&hashTable->coeff.A, &hashTable->coeff.B, hashTable->size);
 
-        ht_collizion->table[i].size = 0;
-    }
+    int* collisions = (int*)calloc(hashTable->size, sizeof(int));
 
-    ht_collizion->size = HT->size;
-    ht_collizion->data.A = HT->data.A;
-    ht_collizion->data.B = HT->data.B;
-
-    return ht_collizion;
-}
-
-int HashFunc(int A, int B, int size, int key) {
-    return ((A * key + B) % P_CONST + P_CONST) % P_CONST % size;
-}
-
-void CalculateCollisions(int* arr, int** collizion, int N, struct HashTable* HT) {
     while (true) {
         for (int i = 0; i < N; i++) {
             int key = arr[i];
             if (key == 0)
                 continue;
 
-            int hashValue = HashFunc(HT->data.A, HT->data.B, HT->size, key);
-            (*collizion)[hashValue]++;
+            int hashValue = Hash(key, hashTable->coeff.A, hashTable->coeff.B, hashTable->size);
+            collisions[hashValue]++;
         }
 
         int sum = 0;
-        for (int i = 0; i < HT->size; i++) {
-            sum += (*collizion)[i] * (*collizion)[i];
+        for (int i = 0; i < hashTable->size; i++) {
+            sum += collisions[i] * collisions[i];
         }
 
         if (sum < 4 * N) {
             break;
         }
 
-        for (int i = 0; i < HT->size; i++) {
-            (*collizion)[i] = 0;
+        for (int i = 0; i < hashTable->size; i++) {
+            collisions[i] = 0;
         }
 
-        HF_GenerCoeff(&HT->data.A, &HT->data.B, HT->size);
-    }
-}
+        GenerateCoeff(&hashTable->coeff.A, &hashTable->coeff.B, hashTable->size);
 
-void UpdateCollizion(struct HashTable* ht_collizion, int* arr, int N, int* collizion) {
+    }
+
+    printf("aaaa\n");
+
+    for (int i = 0; i < hashTable->size; i++) {
+        hashTable->table[i].size = collisions[i] * collisions[i];
+        if (hashTable->table[i].size == 0) {
+            continue;
+        }
+        hashTable->table[i].arr = (int*)calloc(hashTable->table[i].size, sizeof(int));
+        assert(hashTable->table[i].arr);
+    }
+
+    printf("bbb\n");
+     HashTableLevelTwo* htSecondLevel = (HashTableLevelTwo*)malloc(hashTable->size * sizeof(HashTableLevelTwo));
+    for (int i = 0; i < hashTable->size; i++) {
+        htSecondLevel[i].arr = (int*)calloc(collisions[i], sizeof(int));
+        htSecondLevel[i].size = 0;
+    }
+
     for (int i = 0; i < N; i++) {
         int key = arr[i];
         if (key == 0)
             continue;
-
-        int hashValue = HashFunc(ht_collizion->data.A, ht_collizion->data.B, ht_collizion->size, key);
-        ht_collizion->table[hashValue].arr[ht_collizion->table[hashValue].size].value = key;
-        ht_collizion->table[hashValue].size++;
+        int hashValue = Hash(key, hashTable->coeff.A, hashTable->coeff.B, hashTable->size);
+        htSecondLevel[hashValue].arr[htSecondLevel[hashValue].size++]= key;
     }
-}
 
-void UpdateHT(struct HashTable* HT, int* collizion) {
-    HT->table = (struct HashData*)calloc(HT->size, sizeof(struct HashData));
-    for (size_t i = 0; i < HT->size; i++) {
-        HT->table[i].size = collizion[i] * collizion[i];
-        if (HT->table[i].size == 0) {
-            continue;
-        }
-        HT->table[i].arr = (struct node*)calloc(HT->table[i].size, sizeof(struct node));
-        assert(HT->table[i].arr);
-    }
-}
+    printf("cccc\n");
+    for (int i = 0; i < hashTable->size; i++) {
+        int* temp_arr = (int*)calloc(hashTable->table[i].size, sizeof(int));
 
-void BuildCorrectHashTable(struct HashTable* HT, struct HashTable* HT_collizion, int* arr) {
-    for (size_t i = 0; i < HT->size; i++) {
-        if (HT->table[i].size > 0) {
-            HF_GenerCoeff(&HT->table[i].data.A, &HT->table[i].data.B, HT->table[i].size);
+        if (hashTable->table[i].size > 0) {
+                GenerateCoeff(&hashTable->table[i].coeff.A, &hashTable->table[i].coeff.B, hashTable->table[i].size);
         }
 
-        struct node* temp_arr = (struct node*)calloc(HT->table[i].size, sizeof(struct node));
+        // printf("%d ", i);
+        // for (int q = 0; q < htSecondLevel[i].size; q++) {
+        //     printf("%d ", htSecondLevel[i].arr[q]);
+        // }
+        // printf("\n\n\n");
 
-        for (int j = 0; j < HT_collizion->table[i].size; j++) {
-            int key = HT_collizion->table[i].arr[j].value;
+        for (int j = 0; j < htSecondLevel[i].size; j++) {
+            int key = htSecondLevel[i].arr[j];
             if (key == 0)
                 continue;
 
-            int hashValue = HashFunc(HT->table[i].data.A,  HT->table[i].data.B, HT->size, key);
+            int hashValue = Hash(key, hashTable->table[i].coeff.A, hashTable->table[i].coeff.B, hashTable->table[i].size);
 
-            if (temp_arr[hashValue].value != 0) {
-                HF_GenerCoeff(&HT->table[i].data.A, &HT->table[i].data.B, HT->table[i].size);
-                for (size_t k = 0; k < HT->table[i].size; k++) {
-                    temp_arr[k].value = 0;
+            if (temp_arr[hashValue] != 0) {
+                    GenerateCoeff(&hashTable->table[i].coeff.A, &hashTable->table[i].coeff.B, hashTable->table[i].size);
+
+                for (int as = 0; as < hashTable->table[i].size; as++) {
+                    temp_arr[as] = 0;
                 }
-
                 j = -1;
             } else {
-                temp_arr[hashValue].value = key;
+                temp_arr[hashValue] = key;
             }
         }
 
-        for (size_t j = 0; j < HT->table[i].size; j++) {
-            HT->table[i].arr[j].value = temp_arr[j].value;
+        for (int j = 0; j < hashTable->table[i].size; j++) {
+            hashTable->table[i].arr[j] = temp_arr[j];
         }
 
         free(temp_arr);
     }
+    printf("bbb\n");
 }
 
 
-int HT_ID_Build(int* arr, int N, struct HashData* hashTable) {
-    struct HashTable* HT = HT_Ctor(N);
+bool HT_ID_Search(struct HashTable* hashTable, int value) {
+    int hash1 = Hash(value, hashTable->coeff.A, hashTable->coeff.B, hashTable->size);
 
-    int* collizion = (int*)calloc(HT->size, sizeof(int));
-    assert(collizion);
-
-    CalculateCollisions(arr, &collizion, N, HT);
-
-    struct HashTable* ht_collizion = HT_collizion(HT, collizion);
-
-    UpdateCollizion(ht_collizion, arr, N, collizion);
-
-    UpdateHT(HT, collizion);
-
-    BuildCorrectHashTable(HT, ht_collizion, arr);
-
-    free(ht_collizion);
-    free(HT);
-    return 0;
-}
-
-
-bool HT_ID_Search(struct HashData* hashTable, int value) {
-
-    int hash1 = HashFunc(hashTable->data.A, hashTable->data.B, hashTable->size, value);
-
-    if (hashTable[hash1].arr == NULL) {
+    if (hashTable->table[hash1].size == 0) {
         return false;
     }
 
-    int hash2 = HashFunc(hashTable[hash1].data.A, hashTable[hash1].data.B, hashTable->size, value);
+    int hash2 = Hash(value, hashTable->table[hash1].coeff.A, hashTable->table[hash1].coeff.B, hashTable->table[hash1].size);
 
-    if (hashTable[hash1].arr[hash2].value == value )
+    if (hashTable->table[hash1].arr[hash2] == value)
         return true;
     else
         return false;

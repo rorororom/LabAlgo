@@ -14,7 +14,7 @@ typedef struct {
 Operation* generate_operations_p2(int size) {
     Operation *operations = malloc(size * sizeof(Operation));
     for (int i = 0; i < size; i++) {
-        operations[i].op = "+-?"[rand() % 3];
+        operations[i].op = "?"[rand() % 1];
         operations[i].key = rand() % (size * 10);
     }
     return operations;
@@ -50,6 +50,7 @@ void save_operations_to_file(const char *filename, Operation *operations, int si
         perror("Error");
         exit(EXIT_FAILURE);
     }
+    // fprintf(file, "aaaa\n");
     for (int i = 0; i < size; i++) {
         fprintf(file, "%c %d\n", operations[i].op, operations[i].key);
     }
@@ -60,21 +61,17 @@ int main() {
     srand(time(NULL));
 
     int test_sizes_count = 1000000;
-//     for (int i = 10000; i <= 1000000; i += 10000) {
-//         int test_size = i;
-//         Operation *operations = generate_operations_p3(test_size);
-//         char filename[50];
-//
-//         snprintf(filename, sizeof(filename), "../array_tests/test3_%d.txt", i);
-//
-//         generate_operations_p2(test_size);
-//         free(operations);
-//     }
+    for (int i = 10000; i <= 1000000; i += 10000) {
+        int test_size = i;
+        Operation *operations = generate_operations_p3(test_size);
+        char filename[50];
 
-    generate_operations_p2(test_sizes_count);
+        snprintf(filename, sizeof(filename), "../array_tests2/test2_%d.txt", i);
 
-    for (size_t i = 0; i < test_sizes_count; i++)
-    printf("Test files generated successfully.\n");
+        save_operations_to_file(filename, operations, test_size); // Вызов функции для записи операций в файл
+
+        free(operations);
+    }
 
     return 0;
 }

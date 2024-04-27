@@ -1,3 +1,4 @@
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,6 +12,7 @@ const float LOAD_FACTOR_HTO = 0.75; // Hast Table Open hash
 
 #define NOT_FOUND -1
 
+
 //====================================================================================
 //==================================CTOR_DTOR=========================================
 //====================================================================================
@@ -23,6 +25,11 @@ struct HashTable* HT_Create(uint8_t method, int init_size) {
     ht->hash_method      = method;
     ht->table            = (struct Entry*)calloc(ht->length, sizeof(struct Entry));
     assert(ht->table);
+    for (int i = 0; i < init_size; i++) {
+        ht->table[i].status = EMPTY;
+    }
+
+    ht->coeff = HashGetCoeff(init_size);
 
     ht->size              = 0;
     return ht;
@@ -43,6 +50,7 @@ void HT_Rehash(struct HashTable* ht, int new_length) {
     struct Entry* old_table = ht->table;
     int old_length = ht->length;
     ht->length = new_length;
+    ht->size = 0;
 
     ht->table = (struct Entry*)calloc(ht->length, sizeof(struct Entry));
     assert(ht->table);
@@ -71,8 +79,8 @@ void HT_Rehash(struct HashTable* ht, int new_length) {
 void CheckAndRehash(struct HashTable* ht) {
     assert(ht);
 
-    float load_factor = (float)ht->size / ht->length;
-
+    float load_factor = (float)(ht->size )/ (float)(ht->length);
+    // printf("load factor = %f\n", load_factor);
     if (load_factor > LOAD_FACTOR_HTO) {
         int new_length = ht->length * 2;
         HT_Rehash(ht, new_length);
@@ -85,34 +93,44 @@ void CheckAndRehash(struct HashTable* ht) {
 
 void HT_InsertLinear(int key, HashTable* ht) {
     assert(ht);
+    assert(ht->table);
 
-    // CheckAndRehash(ht);
+    CheckAndRehash(ht);
 
-    int index = hash_multiplication(key, ht->length);
+    int index = HashFunc(ht->coeff, key, ht->length);
 
     while (ht->table[index].status == OCCUPIED) {
-        index = (index + 1) % ht->length;
+        // printf("index = %d\n", index);
+        if(ht->table[index].key == key && ht->table[index].status  == OCCUPIED) {
+            return;
+        }
+
+        index = (index + 1) & (ht->length - 1);
     }
 
     ht->table[index].status = OCCUPIED;
     ht->table[index].key = key;
     ht->size++;
 }
-
-#define C1 0.5
-#define C2 0.5
 
 void HT_InsertSquare(int key, HashTable* ht) {
     assert(ht);
+    assert(ht->table);
 
-    // CheckAndRehash(ht);
+    CheckAndRehash(ht);
 
-    int hash = hash_multiplication(key, ht->length);
-    int i = 1;
+    int hash = HashFunc(ht->coeff, key, ht->length);
+
     int index = hash;
+    int i = 1;
 
     while (ht->table[index].status == OCCUPIED) {
-        index = (index + i * (i + 1) / 2) % ht->length;
+        if (ht->table[index].key == key && ht->table[index].status == OCCUPIED){
+            return;
+        }
+
+        index += i;
+        index = index % (ht->length - 1);
         i++;
     }
 
@@ -120,19 +138,25 @@ void HT_InsertSquare(int key, HashTable* ht) {
     ht->table[index].key = key;
     ht->size++;
 }
+
 
 void HT_InsertTwoHash(int key, HashTable* ht) {
     assert(ht);
+    assert(ht->table);
 
-    // CheckAndRehash(ht);
+    CheckAndRehash(ht);
 
-    int h1 = hash_multiplication(key, ht->length);
-    int i = 1;
-    int h2 = hash_func_dreams(key, ht->length);
-    int index = (h1 + i * h2) % ht->length;
+    int h1 = HashFunc(ht->coeff, key, ht->length);
+
+    int index = h1;
+    int i = 0;
 
     while (ht->table[index].status == OCCUPIED) {
-        index = (h1 + i * h2) % ht->length;
+        if (ht->table[index].key == key && ht->table[index].status == OCCUPIED){
+            return;
+        }
+        index += hash_func_dreams(key + i , ht->length);
+        index = index & (ht->length - 1);
         i++;
     }
 
@@ -140,6 +164,7 @@ void HT_InsertTwoHash(int key, HashTable* ht) {
     ht->table[index].key = key;
     ht->size++;
 }
+
 
 //====================================================================================
 //==================================SEARCH============================================
@@ -147,20 +172,15 @@ void HT_InsertTwoHash(int key, HashTable* ht) {
 
 int HT_SearchLinear(int key, struct HashTable* ht) {
     assert(ht);
+    assert(ht->table);
 
-    int index = hash_multiplication(key, ht->length);
-    int originalIndex = index;
-    int count = 0;
+    int index = HashFunc(ht->coeff, key, ht->length);
 
-    while (ht->table[index].status != EMPTY && count < ht->length) {
+    while (ht->table[index].status == OCCUPIED) {
         if (ht->table[index].key == key && ht->table[index].status == OCCUPIED) {
             return index;
         }
-        index = (index + 1) % ht->length;
-        count++;
-        if (index == originalIndex) {
-            break;
-        }
+        index = (index + 1) & (ht->length - 1);
     }
 
     return NOT_FOUND;
@@ -168,46 +188,46 @@ int HT_SearchLinear(int key, struct HashTable* ht) {
 
 int HT_SearchQuadratic(int key, struct HashTable* ht) {
     assert(ht);
+    assert(ht->table);
 
-    int index = hash_multiplication(key, ht->length);
+    int hash = HashFunc(ht->coeff, key, ht->length);
     int i = 1;
-    int originalIndex = index;
+    int index = hash;
 
-    while (ht->table[index].status != EMPTY && i <= ht->length) {
+    while (ht->table[index].status == OCCUPIED) {
         if (ht->table[index].key == key && ht->table[index].status == OCCUPIED) {
             return index;
         }
-        index = (originalIndex + i * i) % ht->length;
+        index += i;
+        index = index % (ht->length - 1);
         i++;
-        if (index == originalIndex) {
-            break;
-        }
     }
 
     return NOT_FOUND;
+
 }
 
 int HT_SearchDoubleHashing(int key, struct HashTable* ht) {
     assert(ht);
+    assert(ht->table);
 
-    int index = hash_multiplication(key, ht->length);
-    int originalIndex = index;
-    int count = 0;
+    int hash1 = HashFunc(ht->coeff, key, ht->length);
+    int index = hash1;
+    int i = 0;
 
-    while (ht->table[index].status != EMPTY && count < ht->length) {
-        if (ht->table[index].key == key && ht->table[index].status == OCCUPIED) {
-            return index;
-        }
-        int h2 = hash_remainder(key, ht->length);
-        index = (index + h2) % ht->length;
-        count++;
-        if (index == originalIndex) {
-            break;
-        }
+    while (ht->table[index].status == OCCUPIED) {
+        index += hash_func_dreams(key + i, ht->length);
+        index = index & (ht->length - 1);
+        i++;
     }
 
-    return NOT_FOUND;
+    if (ht->table[index].key == key && ht->table[index].status == OCCUPIED) {
+        return index;
+    } else {
+        return NOT_FOUND;
+    }
 }
+
 
 //====================================================================================
 //==================================REMOVE============================================
@@ -226,8 +246,9 @@ void HT_RemoveKey(int key, HashTable* ht) {
         index = HT_SearchDoubleHashing(key, ht);
     }
 
-    if (index != -1) {
+    if (index != NOT_FOUND) {
         ht->table[index].status = DELETED;
+        ht->table[index].key = 0;
         ht->size--;
     }
 }

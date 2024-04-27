@@ -54,16 +54,11 @@ unsigned int hash_mantissa(float key, unsigned int table_size) {
     return data.parts.mantissa % MODULE;
 }
 
-int cnt = 0;
 // Извлечение экспоненты
 unsigned int hash_exponent(float key, unsigned int table_size) {
     float_cast data;
     data.f = key;
     int ans = data.parts.exponent % 1000;
-    if (cnt < 10) {
-        printf("%f %d\n", key, ans);
-        cnt++;
-    }
     return ans;
 }
 

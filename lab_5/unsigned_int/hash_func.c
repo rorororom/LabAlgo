@@ -9,7 +9,6 @@ unsigned int hash_remainder(unsigned int key) {
 }
 
 // Битовое представление
-int cnt = 0;
 unsigned int hash_bitwise(unsigned int key) {
     long long result = 0;
     unsigned int base = 1;

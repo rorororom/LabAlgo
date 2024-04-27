@@ -22,8 +22,15 @@ typedef struct List {
 //=============================HT_TABLE====================================
 //===============================================================================
 
+typedef struct Coeff {
+    int A;
+    int B;
+    int P;
+} Coeff;
+
 struct HashTable {
     size_t   length;
+    Coeff*   coeff;
     List*    array;
     size_t   size;
 };
