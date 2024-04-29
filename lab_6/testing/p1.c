@@ -3,7 +3,7 @@
 #include <time.h>
 #include <assert.h>
 
-#include "../naive_search_tree/naive_tree_func.h"
+#include "../naive_search_tree/naive_tree.h"
 
 #define SIZE       100000
 #define SIZE_S     1000000
