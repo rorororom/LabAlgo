@@ -1,243 +1,217 @@
+#include <limits.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <stdbool.h>
+#include <math.h>
 #include <time.h>
 #include <string.h>
-
-#define P_CONST 10000003
-
-#define CHECK_SCANF_D(res, input, var, message, status) \
-    res = fscanf(input, "%d", var);                     \
-    if (res != 1) {                                     \
-        fprintf(output, "%s", message);                 \
-        return status;                                  \
-    }
-
-#define CHECK_SCANF_S(res, input, var, message, status) \
-    res = fscanf(input, "%s", var);                     \
-    if (res != 1) {                                     \
-        fprintf(output, "%s", message);                 \
-        return status;                                  \
-    }
-
-struct node {
-    int value;
-    int flag_zero;
-};
-
-struct HashFuncData {
-    int A;
-    int B;
-};
-
-struct HashTable {
-    struct HashData* table;
-    struct HashFuncData data;
-    int size;
-};
-
-struct HashData {
-    struct HashFuncData data;
-    struct node* arr;
-    int size;
-};
 
 typedef int status_t;
 
 enum STATUS {
-    OK,
+    OK = 0,
     ERROR
 };
 
+#define COEFF_P 1000000007
+
+#define CHECK_SCANF_D(res, input, output, var, message) \
+    res = fscanf(input, "%d", var);                     \
+    if (res != 1) {                                     \
+        fprintf(output, "%s", message);                 \
+        return ERROR;                                       \
+    }
+
+#define CHECK_SCANF_S(res, input, output, var, message) \
+    res = fscanf(input, "%s", var);                     \
+    if (res != 1) {                                     \
+        fprintf(output, "%s", message);                 \
+        return ERROR;                                       \
+    }
+
 /**
- * Генерирует размер хэш-таблицы, который является ближайшей к степени двойки сверху для данного N.
- * @param N - количество элементов
- * @return ближайшая к степени двойки сверху размер хэш-таблицы
+ * @brief Структура для хранения коэффициентов A и B.
  */
-int GenerSizeHT(int N) {
+typedef struct Coefficients {
+    int A; /**< Коэффициент A */
+    int B; /**< Коэффициент B */
+} Coefficients;
+
+
+/**
+ * @struct HashTableLevelTwo
+ * @brief Структура, представляющая второй уровень хэш-таблицы
+ */
+typedef struct HashTableLevelTwo {
+    Coefficients coeff; /**< Коэффициенты для хэш-функции */
+    int* arr;            /**< Массив для хранения ключей */
+    int size;            /**< Размер массива */
+} HashTableLevelTwo;
+
+/**
+ * @struct HashTable
+ * @brief Структура, представляющая основную хэш-таблицу
+ */
+typedef struct HashTable {
+    int size;                 /**< Размер хэш-таблицы */
+    Coefficients coeff;
+    HashTableLevelTwo* table; /**< Массив вторичных хэш-таблиц */
+} HashTable;
+
+/**
+ * @brief Проверка, являются ли два числа взаимно простыми
+ * @param a Первое число
+ * @param b Второе число
+ * @return true, если a и b взаимно просты, иначе false
+ */
+bool Coprime(int a, int b) {
+    while (b != 0) {
+        int temp = b;
+        b = a % b;
+        a = temp;
+    }
+    return a == 1;
+}
+
+/**
+ * @brief Нахождение ближайшей меньшей степени двойки для заданного числа
+ * @param N Число, для которого нужно найти ближайшую меньшую степень двойки
+ * @return Ближайшая меньшая степень двойки
+ */
+int NearestLowerPowerOfTwo(int N) {
     int power = 1;
-    while (power <= N) {
-        power = power << 1;
+    while (power < N) {
+        power <<= 1;
     }
     return power;
 }
 
 /**
- * Генерирует случайные коэффициенты A, B, P для хэш-таблицы.
- * @param A - коэффициент A
- * @param B - коэффициент B
- * @param size - размер хэш-таблицы
+ * @brief Генерирует случайное число в заданном диапазоне.
+ *
+ * @param min Минимальное значение диапазона.
+ * @param max Максимальное значение диапазона.
+ * @return Случайное число в диапазоне [min, max].
  */
-void HF_GenerCoeff(int* A, int* B, size_t size) {
-    *A = rand() % size;
-    *A = 2 * (*A) + 1;
-    *B = rand() % size;
+
+int GenerateA(int min, int max) {
+    double scaled = (double)rand() / RAND_MAX;
+    int res = (int)(scaled * (max - min + 1) + min);
+    return res;
 }
 
-/**
- * Создает хэш-таблицу с указанным размером.
- * @param N - количество элементов
- * @return указатель на созданную хэш-таблицу
- */
-struct HashTable* HT_Ctor(size_t N) {
-    struct HashTable* hashTable = (struct HashTable*)calloc(1, sizeof(struct HashTable));
-
-    int size = GenerSizeHT(N);
-
-    hashTable->size = size;
-
-    HF_GenerCoeff(&hashTable->data.A, &hashTable->data.B, hashTable->size);
-    return hashTable;
-}
-
-/**
- * Создает хэш-таблицу с учетом коллизий.
- * @param HT - исходная хэш-таблица
- * @param collizion - массив коллизий
- * @return указатель на созданную хэш-таблицу с учетом коллизий
- */
-struct HashTable* HT_collizion(struct HashTable* HT, int* collizion) {
-    struct HashTable* ht_collizion = (struct HashTable*)calloc(1, sizeof(struct HashTable));
-    assert(ht_collizion);
-
-    ht_collizion->table = (struct HashData*)calloc(HT->size, sizeof(struct HashData));
-    assert(ht_collizion->table);
-
-    for (size_t i = 0; i < HT->size; i++) {
-        if (collizion[i] != 0) {
-            ht_collizion->table[i].arr = (struct node*)calloc(collizion[i], sizeof(struct node));
-            assert(ht_collizion->table[i].arr);
+status_t ReadDataAndFindData(FILE* input, FILE* output, struct HashTable* hashTable, bool nul) {
+    char command[10];
+    int res = 0;
+    CHECK_SCANF_S(res, input, output, command, "не считались данные\n");
+    while (command[0] != '.') {
+        int value = atoi(command);
+        if(value == 0)
+        {
+            if(nul) fprintf(output, "YES\n");
+            else    fprintf(output, "NO\n");
+                CHECK_SCANF_S(res, input, output, command, "не считались данные\n");
+            continue;
         }
 
-        ht_collizion->table[i].size = 0;
+
+        int hash1  = ((hashTable->coeff.A * value + hashTable->coeff.B) % COEFF_P + COEFF_P) % COEFF_P % hashTable->size;
+        if (hashTable->table[hash1].arr == NULL) {
+            fprintf(output, "NO\n");
+            CHECK_SCANF_S(res, input, output, command, "не считались данные\n");
+            continue;
+        }
+
+        int A2 = hashTable->table[hash1].coeff.A, B2 = hashTable->table[hash1].coeff.B, P2 = COEFF_P;
+        int hash2 = ((A2 * value + B2) % P2 + P2) % P2 % hashTable->table[hash1].size;
+
+        if (hashTable->table[hash1].arr[hash2] == value )
+            fprintf(output, "YES\n");
+        else
+            fprintf(output, "NO\n");
+
+        CHECK_SCANF_S(res, input, output, command, "не считались данные\n");
+    }
+    return 1;
+}
+
+/**
+ * @brief Хэш-функция для ключа.
+ *
+ * @param key Ключ.
+ * @param A Коэффициент A.
+ * @param B Коэффициент B.
+ * @param size Размер таблицы.
+ * @return Значение хэша для ключа.
+ */
+int Hash(int key, int A, int B, int size) {
+    return ((A * key + B) % COEFF_P + COEFF_P) % COEFF_P % size;
+}
+
+/**
+ * @brief Генерирует коэффициенты A и B для хэш-таблицы второго уровня.
+ *
+ * @param A Указатель на коэффициент A.
+ * @param B Указатель на коэффициент B.
+ * @param size Размер таблицы.
+ */
+void GenerateCoeff(int* A, int* B, int size) {
+    (*A) = GenerateA(3, COEFF_P);
+    (*B) = rand() %  size;
+};
+
+/**
+ * @brief Генерирует вторичную хэш-таблицу.
+ *
+ * @param hashTable Основная хэш-таблица.
+ * @param collisions Массив коллизий.
+ * @param arr Массив ключей.
+ * @param N Размер массива ключей.
+ */
+void GenerateSecondaryHashTable(struct HashTable* hashTable, int* collisions, int* arr, size_t N) {
+    HashTableLevelTwo* htSecondLevel = (HashTableLevelTwo*)malloc(hashTable->size * sizeof(HashTableLevelTwo));
+    for (int i = 0; i < hashTable->size; i++) {
+        htSecondLevel[i].arr = (int*)calloc(collisions[i], sizeof(int));
+        htSecondLevel[i].size = 0;
     }
 
-    ht_collizion->size = HT->size;
-    ht_collizion->data.A = HT->data.A;
-    ht_collizion->data.B = HT->data.B;
-
-    return ht_collizion;
-}
-
-/**
- * Обновляет переменные A B с учетом коллизий.
- * @param A    - коэффициент A
- * @param B    - коэффициент B
- * @param size - размер
- * @param key  - ключ
- */
-int HashFunc(int A, int B, int size, int key) {
-    return ((A * key + B) % P_CONST + P_CONST) % P_CONST % size;
-}
-
-/**
- * Вычисляет коллизии для элементов исходного массива исходной хэш-таблицы.
- * @param arr - исходный массив элементов
- * @param collizion - массив коллизий
- * @param N - количество элементов
- * @param HT - исходная хэш-таблица
- */
-void CalculateCollisions(int* arr, int** collizion, int N, struct HashTable* HT) {
-    while (true) {
-        for (int i = 0; i < N; i++) {
-            int key = arr[i];
-            if (key == 0)
-                continue;
-
-            int hashValue = HashFunc(HT->data.A, HT->data.B, HT->size, key);
-            (*collizion)[hashValue]++;
-        }
-
-        int sum = 0;
-        for (int i = 0; i < HT->size; i++) {
-            sum += (*collizion)[i] * (*collizion)[i];
-        }
-
-        if (sum < 4 * N) {
-            break;
-        }
-
-        for (int i = 0; i < HT->size; i++) {
-            (*collizion)[i] = 0;
-        }
-
-        HF_GenerCoeff(&HT->data.A, &HT->data.B, HT->size);
-    }
-}
-
-/**
- * Обновляет хэш-таблицу с учетом коллизий.
- * @param ht_collizion - хэш-таблица с учетом коллизий
- * @param arr - исходный массив элементов
- * @param N - количество элементов
- * @param collizion - массив коллизий
- */
-void UpdateCollizion(struct HashTable* ht_collizion, int* arr, int N, int* collizion) {
     for (int i = 0; i < N; i++) {
         int key = arr[i];
         if (key == 0)
             continue;
-
-        int hashValue = HashFunc(ht_collizion->data.A, ht_collizion->data.B, ht_collizion->size, key);
-        ht_collizion->table[hashValue].arr[ht_collizion->table[hashValue].size].value = key;
-        ht_collizion->table[hashValue].size++;
+        int hashValue = Hash(key, hashTable->coeff.A, hashTable->coeff.B, hashTable->size);
+        htSecondLevel[hashValue].arr[htSecondLevel[hashValue].size++]= key;
     }
-}
 
+    for (int i = 0; i < hashTable->size; i++) {
+        int* temp_arr = (int*)calloc(hashTable->table[i].size, sizeof(int));
 
-/**
- * Обновляет хэш-таблицу с учетом коллизий.
- * @param HT - исходная хэш-таблица
- * @param collizion - массив коллизий
- */
-void UpdateHT(struct HashTable* HT, int* collizion) {
-    HT->table = (struct HashData*)calloc(HT->size, sizeof(struct HashData));
-    for (size_t i = 0; i < HT->size; i++) {
-        HT->table[i].size = collizion[i] * collizion[i];
-        if (HT->table[i].size == 0) {
-            continue;
-        }
-        HT->table[i].arr = (struct node*)calloc(HT->table[i].size, sizeof(struct node));
-        assert(HT->table[i].arr);
-    }
-}
-
-/**
- * Строит корректную хэш-функцию для хэш-таблицы с учетом коллизий (2 уровень).
- * @param HT - исходная хэш-таблица
- * @param HT_collizion - хэш-таблица с учетом коллизий
- * @param arr - исходный массив элементов
- */
-void BuildCorrectHashTable(struct HashTable* HT, struct HashTable* HT_collizion, int* arr) {
-    for (size_t i = 0; i < HT->size; i++) {
-        if (HT->table[i].size > 0) {
-            HF_GenerCoeff(&HT->table[i].data.A, &HT->table[i].data.B, HT->table[i].size);
+        if (hashTable->table[i].size > 0) {
+                GenerateCoeff(&hashTable->table[i].coeff.A, &hashTable->table[i].coeff.B, hashTable->table[i].size);
         }
 
-        struct node* temp_arr = (struct node*)calloc(HT->table[i].size, sizeof(struct node));
-
-        for (int j = 0; j < HT_collizion->table[i].size; j++) {
-            int key = HT_collizion->table[i].arr[j].value;
+        for (int j = 0; j < htSecondLevel[i].size; j++) {
+            int key = htSecondLevel[i].arr[j];
             if (key == 0)
                 continue;
 
-            int hashValue = HashFunc(HT->table[i].data.A,  HT->table[i].data.B, HT->size, key);
+            int hashValue = Hash(key, hashTable->table[i].coeff.A, hashTable->table[i].coeff.B, hashTable->table[i].size);
 
-            if (temp_arr[hashValue].value != 0) {
-                HF_GenerCoeff(&HT->table[i].data.A, &HT->table[i].data.B, HT->table[i].size);
-                for (size_t k = 0; k < HT->table[i].size; k++) {
-                    temp_arr[k].value = 0;
+            if (temp_arr[hashValue] != 0) {
+                    GenerateCoeff(&hashTable->table[i].coeff.A, &hashTable->table[i].coeff.B, hashTable->table[i].size);
+
+                for (int as = 0; as < hashTable->table[i].size; as++) {
+                    temp_arr[as] = 0;
                 }
-
                 j = -1;
             } else {
-                temp_arr[hashValue].value = key;
+                temp_arr[hashValue] = key;
             }
         }
 
-        for (size_t j = 0; j < HT->table[i].size; j++) {
-            HT->table[i].arr[j].value = temp_arr[j].value;
+        for (int j = 0; j < hashTable->table[i].size; j++) {
+            hashTable->table[i].arr[j] = temp_arr[j];
         }
 
         free(temp_arr);
@@ -245,112 +219,89 @@ void BuildCorrectHashTable(struct HashTable* HT, struct HashTable* HT_collizion,
 }
 
 /**
- * Считывает данные из ввода.
- * @param arr - указатель на массив элементов
- * @param N - указатель на количество элементов
- * @param flagZero - указатель на флаг наличия элементов со значением 0
- * @param input - файловый поток ввода
- * @param output - файловый поток вывода
- * @return статус выполнения
+ * @brief Строит основную хэш-таблицу.
+ *
+ * @param hashTable Указатель на хэш-таблицу.
+ * @param arr Массив ключей.
+ * @param N Размер массива ключей.
  */
-status_t ReadData(int** arr, int* N, bool* flagZero, FILE* input, FILE* output) {
-    int res;
-    CHECK_SCANF_D(res, stdin, N, "не считался размер\n", ERROR)
+void BuildHashTable(struct HashTable* hashTable, int* arr, int N) {
+    GenerateCoeff(&hashTable->coeff.A, &hashTable->coeff.B, hashTable->size);
 
-    *arr = (int*)calloc(*N, sizeof(int));
+    int* collisions = (int*)calloc(hashTable->size, sizeof(int));
 
-    for (size_t i = 0; i < *N; i++) {
-        CHECK_SCANF_D(res, stdin, &((*arr)[i]), "не считался размер\n", ERROR)
+    while (true) {
+        for (int i = 0; i < N; i++) {
+            int key = arr[i];
+            if (key == 0)
+                continue;
 
-        if ((*arr)[i] == 0) {
-            *flagZero = true;
+            int hashValue = Hash(key, hashTable->coeff.A, hashTable->coeff.B, hashTable->size);
+            collisions[hashValue]++;
         }
+
+        int sum = 0;
+        for (int i = 0; i < hashTable->size; i++) {
+            sum += collisions[i] * collisions[i];
+        }
+
+        if (sum < 4 * N) {
+            break;
+        }
+
+        for (int i = 0; i < hashTable->size; i++) {
+            collisions[i] = 0;
+        }
+
+        GenerateCoeff(&hashTable->coeff.A, &hashTable->coeff.B, hashTable->size);
+
     }
 
-    return OK;
-}
 
-/**
- * Обрабатывает команды для хэш-таблицы.
- * @param HT - указатель на хэш-таблицу
- * @param flagZero - флаг наличия элементов со значением 0
- * @param input - файловый поток ввода
- * @param output - файловый поток вывода
- * @return статус выполнения
- */
-status_t ProcessCommands(struct HashTable* HT, bool flagZero, FILE* input, FILE* output) {
-    char command[10];
-    int res;
-    CHECK_SCANF_S(res, input, command, "не считался размер\n", ERROR)
-
-    while (command[0] != '.') {
-        int value = atoi(command);
-        if (value == 0) {
-            if (flagZero)
-                fprintf(output, "YES\n");
-            else
-                fprintf(output, "NO\n");
-
-            CHECK_SCANF_S(res, input, command, "не считалось значение\n", ERROR)
+    for (int i = 0; i < hashTable->size; i++) {
+        hashTable->table[i].size = collisions[i] * collisions[i];
+        if (hashTable->table[i].size == 0) {
+            continue;
         }
-
-        int hash1 = ((HT->A * value + HT->B) % HT->P + HT->P) % HT->P % HT->size;
-        if (HT->table[hash1].arr == NULL) {
-            fprintf(output, "NO\n");
-
-            CHECK_SCANF_S(res, input, command, "не считалось значение\n", ERROR)
-        }
-
-        int hash2 = HashFunc(&HT->table[hash1], value);
-        if (HT->table[hash1].arr[hash2].value == value) {
-            fprintf(output, "YES\n");
-        } else {
-            fprintf(output, "NO\n");
-        }
-
-        CHECK_SCANF_S(res, input, command, "не считалось значение\n", ERROR)
+        hashTable->table[i].arr = (int*)calloc(hashTable->table[i].size, sizeof(int));
+        assert(hashTable->table[i].arr);
     }
 
-    return OK;
+    GenerateSecondaryHashTable(hashTable, collisions, arr, N);
 }
 
 
 int main() {
     srand(time(NULL));
-    FILE* input  = stdin;
+    FILE* input = stdin;
     FILE* output = stdout;
 
     int N = 0;
-    int* arr;
+    int res = 0;
+    CHECK_SCANF_D(res, input, output, &N, "не считался размер\n");
 
-    bool flagZero = false;
+    bool nul = false;
+    int* arr = (int*)calloc(N, sizeof(int));
+    for (size_t i = 0; i < N; i++) {
+        CHECK_SCANF_D(res, input, output, &arr[i], "не считался число\n")
+        if(arr[i] == 0) {
+            nul = true;
+        }
+    }
 
-    status_t res = ReadData(&arr, &N, &flagZero, input, output);
-    if (res)
+    int size = NearestLowerPowerOfTwo(N);
+
+    HashTable hashTable;
+    hashTable.size = size;
+
+    hashTable.table = (HashTableLevelTwo*)malloc(size * sizeof(HashTableLevelTwo));
+    assert(hashTable.table);
+
+    BuildHashTable(&hashTable, arr, N);
+
+    status_t status = ReadDataAndFindData(input, output, &hashTable, nul);
+    if (status)
         return 1;
-
-    struct HashTable* HT = HT_Ctor(N);
-
-    int* collizion = (int*)calloc(HT->size, sizeof(int));
-    assert(collizion);
-
-    CalculateCollisions(arr, &collizion, N, HT);
-
-    struct HashTable* ht_collizion = HT_collizion(HT, collizion);
-
-    UpdateCollizion(ht_collizion, arr, N, collizion);
-
-    UpdateHT(HT, collizion);
-
-    BuildCorrectHashTable(HT, ht_collizion, arr);
-
-    res = ProcessCommands(HT, flagZero, input, output);
-    if (res)
-        return 1;
-
-    free(ht_collizion);
-    free(HT);
 
     return 0;
 }
-
