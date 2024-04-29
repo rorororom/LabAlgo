@@ -6,7 +6,7 @@
 #define MODULE 1000000000
 
 typedef struct node {
-    void* time;
+    void* value;
     struct node* left;
     struct node* right;
     int height;
@@ -14,9 +14,8 @@ typedef struct node {
 
 void readAndProcessData(int n, FILE* input, FILE* output);
 
-
 int main() {
-    int n;
+    int n = 0;
     int res = scanf("%d", &n);
     if (res != 1) {
         printf("Error: Failed to read input.\n");
@@ -28,6 +27,10 @@ int main() {
 
     readAndProcessData(n, input, output);
     return 0;
+}
+
+int compareStrings(const void *a, const void *b) {
+    return strcmp((const char*)a, (const char*)b);
 }
 
 int max(int a, int b) {
@@ -44,11 +47,11 @@ int height(node* n) {
     return n->height;
 }
 
-node* newNode(void* time) {
+node* newNode(void* value) {
     node* n = (node*)malloc(sizeof(node));
     assert(n);
 
-    n->time = time;
+    n->value = value;
     n->left = NULL;
     n->right = NULL;
     n->height = 0;
@@ -118,14 +121,14 @@ node* BalanceNode(node* node, int balance) {
 }
 
 
-node* Insert(node* node, void* time, size_t size) {
+node* insert(node* node, void* value, size_t size) {
     if (node == NULL)
-        return newNode(time);
+        return newNode(value);
 
-    if (memcmp(time, node->time, size) < 0)
-        node->left = Insert(node->left, time, size);
+    if (compareStrings(value, node->value) < 0)
+        node->left = insert(node->left, value, size);
     else
-        node->right = Insert(node->right, time, size);
+        node->right = insert(node->right, value, size);
 
     node->height = 1 + max(height(node->left), height(node->right));
 
@@ -137,23 +140,24 @@ node* Insert(node* node, void* time, size_t size) {
     return node;
 }
 
-void* nextTime(node* root, void* time, size_t size) {
+void* findValue(node* root, void* value, size_t size) {
     if (root == NULL)
         return NULL;
 
-    if (memcmp(time, root->time, size) == 0) {
-        return root->time;
-    } else if (memcmp(time, root->time, size) < 0) {
-        void* flag = nextTime(root->left, time, size);
+    if (compareStrings(value, root->value) == 0) {
+        return root->value;
+    } else if (compareStrings(value, root->value) < 0) {
+        void* flag = findValue(root->left, value, size);
         if (flag != NULL) {
             return flag;
         } else {
-            return root->time;
+            return root->value;
         }
     } else {
-        return nextTime(root->right, time, size);
+        return findValue(root->right, value, size);
     }
 }
+
 
 void deleteTree(node* root) {
     if (root == NULL)
@@ -170,20 +174,20 @@ void readAndProcessData(int n, FILE* input, FILE* output) {
     char last_op = ' ';
     int last_res = -1;
     for (int i = 0; i < n; i++) {
-        char op = 0; int time = 0;
-        int res = scanf(" %c %d", &op, &time);
-        if (res != 1) {
+        char op = 0; int value = 0;
+        int res = scanf(" %c %d", &op, &value);
+        if (res != 2) {
             printf("Error: Failed to read input.\n");
             return;
         }
 
         if (op == '+') {
             if (last_op == '?') {
-                time = (time + last_res) % MODULE;
+                value = (value + last_res) % MODULE;
             }
-            root = Insert(root, &time, sizeof(int));
+            root = insert(root, &value, sizeof(int));
         } else if (op == '?') {
-            void* res = nextTime(root, &time, sizeof(int));
+            void* res = findValue(root, &value, sizeof(int));
             if (res != NULL) {
                 int res_value = *(int*)res;
                 last_res = res_value;
