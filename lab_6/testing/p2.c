@@ -5,32 +5,28 @@
 #define STEP 100000
 #define MAX_TEST 1000000
 
-#include "../naive_search_tree/naive_tree.h"
+#include "../AVL/avl_tree.h"
 
-void testing_insert(int* arr, int n, Node* root) {
+void testing_insert(int* arr, int n, node* root) {
     for (size_t i = 0; i < n; i++) {
-        if (NST_Search(root, arr[i]) == NULL) {
-            root = NST_Insert(root, arr[i]);
-        }
+        root = Insert(root, arr[i]);
     }
 }
 
-void testing_delete(int* arr, int n, Node* root) {
+void testing_delete(int* arr, int n, node* root) {
     for (size_t i = 0; i < n / 2; i++) {
-        if (NST_Search(root, arr[i]) != NULL) {
-            root = NST_DeleteNode(root, arr[i]);
-        }
+        root = RemoveTree(root, arr[i]);
     }
 }
 
 int main() {
-    FILE* file_i = fopen("../res/p1_insert.txt", "w");
+    FILE* file_i = fopen("../res/p2_insert.txt", "w");
     if (file_i == NULL) {
         printf("ошинбос\n");
         return 1;
     }
 
-    FILE* file_d = fopen("../res/p1_delete.txt", "w");
+    FILE* file_d = fopen("../res/p2_delete.txt", "w");
     if (file_d == NULL) {
         printf("ошинбос\n");
         return 1;
@@ -55,7 +51,7 @@ int main() {
         double time_insert = 0, time_delete = 0;
         for (int j = 0; j < 5; j++) {
             clock_t start, end;
-            Node* root = NULL;
+            node* root = NULL;
 
             start = clock();
             testing_insert(arr, i, root);
@@ -66,7 +62,7 @@ int main() {
             testing_delete(arr, i, root);
             end = clock();
             time_delete += ((double)(end - start)) / CLOCKS_PER_SEC;
-            NST_Delete(root);
+            deleteTree(root);
             free(root);
         }
 

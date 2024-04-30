@@ -4,7 +4,7 @@
 #include <limits.h>
 #include <assert.h>
 
-#define MAX_LEVEL 1000
+#define MAX_LEVEL 100000
 
 #include "skip_list.h"
 

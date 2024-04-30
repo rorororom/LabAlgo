@@ -1,10 +1,10 @@
 #ifndef NAIVE_TREE_H
 #define NAIVE_TREE_H
 
-struct Node {
+typedef struct Node {
     int key;
     struct Node *left, *right;
-};
+} Node;
 
 // NST - NAIVE SEARCH TREE
 

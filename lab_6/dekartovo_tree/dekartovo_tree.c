@@ -9,6 +9,18 @@ int GoodRand() {
     return rand() % 1000000007;
 }
 
+pnode createNode(int key) {
+    pnode newNode = (pnode)malloc(sizeof(struct node));
+    if (newNode) {
+        newNode->key = key;
+        newNode->prior = GoodRand();
+        newNode->size = 1;
+        newNode->l = NULL;
+        newNode->r = NULL;
+    }
+    return newNode;
+}
+
 void update_size(pnode t) {
     if (t)
         t->size = 1 + (t->l ? t->l->size : 0) + (t->r ? t->r->size : 0);
@@ -84,6 +96,14 @@ bool exists(pnode t, int key) {
         return exists(t->r, key);
 }
 
+void deleteTree(pnode t) {
+    if (t) {
+        deleteTree(t->l);
+        deleteTree(t->r);
+        free(t);
+    }
+}
+
 
 // int main() {
 //     pnode root = NULL;
@@ -94,12 +114,10 @@ bool exists(pnode t, int key) {
 //         scanf("%d", &x);
 //         if (strcmp(operation, "insert") == 0) {
 //             if (!exists(root, x)) {
-//                 pnode newnode = (pnode)malloc(sizeof(struct node));
-//                 newnode->key = x;
-//                 newnode->prior = GoodRand();
-//                 newnode->size = 1;
-//                 newnode->l = newnode->r = NULL;
-//                 insert(&root, newnode);
+//                 pnode newnode = createNode(x);
+//                 if (newnode != NULL) {
+//                     insert(&root, newnode);
+//                 }
 //             }
 //         } else if (strcmp(operation, "delete") == 0) {
 //             if (exists(root, x)) {

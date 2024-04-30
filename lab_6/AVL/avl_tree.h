@@ -10,5 +10,6 @@ typedef struct node {
 
 node* Insert(node* node, int value);
 node* RemoveTree(node* root, int value);
+void deleteTree(node* root);
 
 #endif
