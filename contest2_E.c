@@ -102,7 +102,6 @@ node* BalanceNode(node* node, int balance) {
     if (balance == 2) {
         if (getBalance(node->left) < 0) {
             node->left = smallRotateRight(node->left);
-            return smallRotateLeft(node);
         }
 
         return smallRotateLeft(node);
@@ -111,7 +110,6 @@ node* BalanceNode(node* node, int balance) {
     if (balance == -2) {
         if (getBalance(node->right) > 0) {
             node->right = smallRotateLeft(node->right);
-            return smallRotateRight(node);
         }
 
         return smallRotateRight(node);
