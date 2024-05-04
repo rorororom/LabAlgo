@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 #include <time.h>
 
 #include "../RMQ/sparse_table.h"
@@ -9,6 +10,14 @@ const int CNT = 5;
 
 // #define VAR1
 #define VAR2
+
+#ifdef VAR2
+bool VAR = 1;
+#endif
+
+#ifdef VAR1
+bool VAR = 0;
+#endif
 
 typedef struct {
     int start;
@@ -22,12 +31,7 @@ void measureTime(int** table, int* arr, Segment* segments, int n, int* log_table
     for (int j = 0; j < CNT; j++) {
         start = clock();
         for (int i = 0; i < n; i++) {
-#ifdef VAR1
-            int result = query1(table, segments[i].start, segments[i].end, log_table);
-#endif
-#ifdef VAR2
-            int result = query2(table, segments[i].start, segments[i].end, log_table);
-#endif
+            int result = query(table, segments[i].start, segments[i].end, log_table, VAR);
         }
         end = clock();
         total_time += ((double) (end - start)) / CLOCKS_PER_SEC;
@@ -53,7 +57,11 @@ int main() {
     }
 
     for (int i = 0; i < N; i++) {
-        fscanf(file, "%d %d", &segments[i].start, &segments[i].end);
+        int res = fscanf(file, "%d %d", &segments[i].start, &segments[i].end);
+        if (res != 2) {
+            printf("не считалось\n");
+            return 1;
+        }
     }
 
     fclose(file);
@@ -74,19 +82,16 @@ int main() {
     }
 
     for (int i = 0; i < N; i++) {
-        fscanf(file, "%d", &arr[i]);
+        int res = fscanf(file, "%d", &arr[i]);
+        if (res != 1) {
+            printf("не считалось\n");
+            return 1;
+        }
     }
     fclose(file);
 
     int* log_table = computeLogTable(N);
-
-    int** table = NULL;
-#ifdef VAR1
-    table = buildTable1(arr, N, log_table);
-#endif
-#ifdef VAR2
-    table = buildTable2(arr, N, log_table);
-#endif
+    int** table = ctorTable(arr, N, log_table, VAR);
 
     if (table == NULL) {
         printf("Ошибка при построении Sparse Table\n");
@@ -102,12 +107,6 @@ int main() {
     free(arr);
     free(log_table);
 
-#ifdef VAR1
-    freeSparseTable1(table, N);
-#endif
-#ifdef VAR2
-    freeSparseTable2(table, N, log_table);
-#endif
-
+    freeSparseTable(table, N, log_table, VAR);
     return 0;
 }

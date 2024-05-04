@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <assert.h>
 
 void build(int* tree, int* arr, int node, int start, int end) {

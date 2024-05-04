@@ -1,5 +1,3 @@
-#include <stdio.h>
-#include <stdlib.h>
 #include <assert.h>
 
 void update(int* tree, int index, int value, int n) {

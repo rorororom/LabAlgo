@@ -70,7 +70,11 @@ int main() {
     }
 
     for (int i = 0; i < N; i++) {
-        fscanf(file, "%d %d", &segments[i].start, &segments[i].end);
+        int res = fscanf(file, "%d %d", &segments[i].start, &segments[i].end);
+        if (res != 2) {
+            printf("не считалось\n");
+            return 1;
+        }
     }
 
     fclose(file);
@@ -91,7 +95,11 @@ int main() {
     }
 
     for (int i = 0; i < N; i++) {
-        fscanf(file, "%d", &arr[i]);
+        int res = fscanf(file, "%d", &arr[i]);
+        if (res != 1) {
+            printf("не считалось\n");
+            return 1;
+        }
     }
     fclose(file);
 
