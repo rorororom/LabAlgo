@@ -3,14 +3,16 @@
 
 typedef struct Node {
     int key;
-    struct Node *left, *right;
+    struct Node* left;
+    struct Node* right;
 } Node;
 
 // NST - NAIVE SEARCH TREE
 
-struct Node* NST_Insert    (struct Node* node, int key);
-struct Node* NST_Search    (struct Node* root, int key);
-struct Node* NST_DeleteNode(struct Node* root, int key);
-void         NST_Delete    (struct Node* node);
+Node* createNode(int key) ;
+Node* insert(Node* root, int key);
+Node* search(Node* root, int key);
+Node* deleteNode(Node* root, int key);
+void deleteTree(Node* root);
 
 #endif

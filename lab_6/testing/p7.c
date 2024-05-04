@@ -8,14 +8,15 @@
 
 #include "../skip_list/skip_list.h"
 
-void testing_insert(int* arr, int n, struct SkipList *skipList) {
+void testing_insert(int* arr, int n, struct SkipList* skipList) {
     for (size_t i = 0; i < n; i++) {
         insert(skipList, arr[i]);
     }
 }
 
-void testing_delete(int* arr, int n, struct SkipList *skipList) {
+void testing_delete(int* arr, int n, struct SkipList* skipList) {
     for (size_t i = 0; i < n / 2; i++) {
+        // printf("%zu %d\n", i, arr[i]);
         erase(skipList, arr[i]);
     }
 }
@@ -49,16 +50,16 @@ int main() {
             fscanf(file, "%d", &arr[j]);
         }
 
+        srand(time(NULL));
         double time_insert = 0, time_delete = 0;
         for (int j = 0; j < 5; j++) {
             clock_t start, end;
-            SkipList *skipList = createSkipList();
+            SkipList* skipList = createSkipList();
 
             start = clock();
             testing_insert(arr, i, skipList);
             end = clock();
             time_insert += ((double)(end - start)) / CLOCKS_PER_SEC;
-            // display(skipList);
 
             start = clock();
             testing_delete(arr, i, skipList);
@@ -69,7 +70,6 @@ int main() {
 
         fprintf(file_i, "%zu %f\n", i, time_insert / 5);
         fprintf(file_d, "%zu %f\n", i, time_delete / 5);
-
         fclose(file);
     }
 

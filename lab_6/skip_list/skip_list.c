@@ -26,7 +26,7 @@ SkipList *createSkipList() {
     SkipList *skipList = (SkipList *)malloc(sizeof(SkipList));
     assert(skipList);
 
-    skipList->level    = 0; // Установка начального уровня
+    skipList->level    = 0;
     skipList->header   = createNode(MAX_LEVEL, INT_MIN);
 
     return skipList;
@@ -69,7 +69,7 @@ void insert(SkipList *skipList, int key) {
         skipList->level = level;
     }
 
-    Node *newNode = createNode(level, key); // Указываем значение как NULL
+    Node *newNode = createNode(level, key);
 
     for (int i = 0; i <= level; i++) {
         newNode->forward[i] = update[i]->forward[i];
@@ -161,49 +161,52 @@ void destroySkipList(SkipList *skipList) {
 // int main() {
 //     SkipList *skipList = createSkipList();
 //
-//     insert(skipList, 3, 30);
+//     insert(skipList, 3);
 //     display(skipList);
-//     insert(skipList, 6, 60);
+//     insert(skipList, 6);
 //     display(skipList);
-//     insert(skipList, 7, 70);
+//     insert(skipList, 7);
 //     display(skipList);
-//     insert(skipList, 9, 90);
+//     insert(skipList, 9);
 //     display(skipList);
-//     insert(skipList, 1, 10);
+//     insert(skipList, 1);
 //     display(skipList);
-//     insert(skipList, 11, 30);
+//     insert(skipList, 11);
 //     display(skipList);
-//     insert(skipList, 12, 30);
+//     insert(skipList, 12);
 //     display(skipList);
-//     insert(skipList, 13, 30);
+//     insert(skipList, 13);
 //     display(skipList);
-//     insert(skipList, 14, 30);
+//     insert(skipList, 14);
 //     display(skipList);
-//     insert(skipList, 15, 30);
+//     insert(skipList, 15);
 //     display(skipList);
-//     insert(skipList, 16, 30);
+//     insert(skipList, 16);
 //     display(skipList);
-//     insert(skipList, 17, 30);
+//     insert(skipList, 17);
 //     display(skipList);
-//     insert(skipList, 18, 30);
+//     insert(skipList, 18);
 //     display(skipList);
-//     insert(skipList, 19, 30);
+//     insert(skipList, 19);
 //     display(skipList);
-//     insert(skipList, 20, 30);
+//     insert(skipList, 20);
 //     display(skipList);
-//     insert(skipList, 21, 30);
+//     insert(skipList, 21);
 //     display(skipList);
-//     insert(skipList, 22, 30);
+//     insert(skipList, 22);
 //     display(skipList);
-//     insert(skipList, 23, 30);
+//     insert(skipList, 23);
 //     display(skipList);
-//     insert(skipList, 24, 30);
+//     insert(skipList, 24);
 //     display(skipList);
 //
 //
 //     display(skipList);
 //
 //     erase(skipList, 7);
+//
+//     display(skipList);
+//     erase(skipList, 15);
 //
 //     display(skipList);
 //

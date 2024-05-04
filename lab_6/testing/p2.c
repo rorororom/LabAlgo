@@ -20,21 +20,21 @@ void testing_delete(int* arr, int n, node* root) {
 }
 
 int main() {
-    FILE* file_i = fopen("../res/p2_insert.txt", "w");
+    FILE* file_i = fopen("../res/p2_insert_2.txt", "w");
     if (file_i == NULL) {
         printf("ошинбос\n");
         return 1;
     }
 
-    FILE* file_d = fopen("../res/p2_delete.txt", "w");
+    FILE* file_d = fopen("../res/p2_delete_2.txt", "w");
     if (file_d == NULL) {
         printf("ошинбос\n");
         return 1;
     }
 
-    for (size_t i = STEP; i <= MAX_TEST; i += STEP) {
+    for (size_t i = MAX_TEST; i <= MAX_TEST; i += STEP) {
         char filename[50];
-        sprintf(filename, "../array/test_%zu.txt", i);
+        sprintf(filename, "../array/tetsA.txt");
 
         FILE* file = fopen(filename, "r");
 
