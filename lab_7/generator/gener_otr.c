@@ -24,7 +24,6 @@ int main() {
     const int MAX_SEGMENTS = 1000000;
     const int ARRAY_SIZE = 1000000;
 
-    printf("Сгенерированные невырожденные отрезки:\n");
     for (int i = 0; i < MAX_SEGMENTS; i++) {
         Segment segment = generateSegment(0, ARRAY_SIZE);
         printf("%d %d\n", segment.start, segment.end);
