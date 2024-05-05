@@ -41,7 +41,6 @@ void InserKeysFromFile(int* data, struct HashTable* ht, int method) {
 
 #ifdef OPEN_HASH
     for (size_t i = 0; i < SIZE_TESTS; i++) {
-        // printf("%d ", i);
         if (method == LINEAR)
             HT_InsertLinear(data[i], ht);
         else if (method == SQUARE)

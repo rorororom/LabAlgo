@@ -50,7 +50,6 @@ void save_operations_to_file(const char *filename, Operation *operations, int si
         perror("Error");
         exit(EXIT_FAILURE);
     }
-    // fprintf(file, "aaaa\n");
     for (int i = 0; i < size; i++) {
         fprintf(file, "%c %d\n", operations[i].op, operations[i].key);
     }

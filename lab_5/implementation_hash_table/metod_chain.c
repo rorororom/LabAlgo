@@ -72,8 +72,6 @@ void HT_CH_Destroy(struct HashTable* ht) {
 
     ht->array = NULL;
     ht = NULL;
-    //if (ht == NULL)
-        //printf("AAAA\n");
 }
 
 //====================================================================================
@@ -83,7 +81,6 @@ void HT_CH_Destroy(struct HashTable* ht) {
 void HT_CH_Rehash(struct HashTable* ht) {
     assert(ht);
 
-    // printf("da blyat\n");
     size_t new_length = ht->length * 2;
     List* new_array = (List*)calloc(new_length, sizeof(List));
     assert(new_array);
@@ -166,12 +163,10 @@ void HT_CH_Insert(int key, struct HashTable* ht) {
     assert(ht);
 
     if (HT_CH_Search(key, ht)) {
-        // printf("a ");
         return;
     }
 
     RehashIfNeeded(ht);
-    // printf("d ");
 
     int hash = HashFunc(ht->coeff, key, ht->length) % ht->length;
 

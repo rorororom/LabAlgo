@@ -80,7 +80,6 @@ void CheckAndRehash(struct HashTable* ht) {
     assert(ht);
 
     float load_factor = (float)(ht->size )/ (float)(ht->length);
-    // printf("load factor = %f\n", load_factor);
     if (load_factor > LOAD_FACTOR_HTO) {
         int new_length = ht->length * 2;
         HT_Rehash(ht, new_length);
@@ -100,7 +99,6 @@ void HT_InsertLinear(int key, HashTable* ht) {
     int index = HashFunc(ht->coeff, key, ht->length);
 
     while (ht->table[index].status == OCCUPIED) {
-        // printf("index = %d\n", index);
         if(ht->table[index].key == key && ht->table[index].status  == OCCUPIED) {
             return;
         }

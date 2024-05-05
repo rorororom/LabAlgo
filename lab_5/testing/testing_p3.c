@@ -29,7 +29,6 @@ void testing(struct HashTable* ht, int* arr_search) {
 #endif
 #ifdef OPEN_HASH
         int result = HT_SearchQuadratic(arr_search[i], ht);
-        //printf("result = %d ", result);
 #endif
 #ifdef METHOD_CHAIN
         bool result = HT_CH_Search(arr_search[i], ht);
@@ -87,10 +86,6 @@ int main() {
     }
 
     fclose(file_search);
-
-    // for (int i = 0; i < NUMBERS_TO_READ; i++) {
-    //     printf("%d ", arr[i]);
-    // }
 
 #ifdef IDEAL_HASH
     int size = NearestLowerPowerOfTwo(NUMBERS_TO_READ);

@@ -47,13 +47,11 @@ nn* readData(const char* testFile, int size) {
         char op;
         int key;
         int res = fscanf(file, " %c %d", &op, &key);
-        // printf();
         if (res != 2)
             abort();
         nodes[i].op = op;
         nodes[i].key = key;
 
-        // printf("%d %c %d\n", i, nodes[i].op, nodes[i].key);
     }
 
     fclose(file);
@@ -67,44 +65,36 @@ void testing(struct nn* node, struct HashTable* ht, int method, int size) {
     char op;
 
     for (size_t i = 0; i < size; i++){
-        // printf("i = %d\n", i);
-        // printf("%d ", i);
         op = node[i].op;
         key = node[i].key;
         if (op == '+') {
 #ifdef HASH_OPEN
             if (method == LINEAR) {
-                // printf("!!!\n");
                 HT_InsertLinear(key, ht);
             }
             else if (method == SQUARE) {
                 HT_InsertSquare(key, ht);
             }
             else {
-                // printf("bb\n");
                 HT_InsertTwoHash(key, ht);
             }
 #endif
 
 #ifdef HASH_CHAIN
-            // printf("a ");
             HT_CH_Insert(key, ht);
 #endif
 
         } else if (op == '-') {
 #ifdef HASH_OPEN
-            // printf("---\n");
             HT_RemoveKey(key, ht);
 #endif
 #ifdef HASH_CHAIN
-            // printf("b ");
             HT_CH_RemoveKey(key, ht);
 #endif
         } else if (op == '?') {
 #ifdef HASH_OPEN
             int found = 0;
             if (method == LINEAR) {
-                // printf("???\n");
                 found = HT_SearchLinear(key, ht);
             }
             else if (method == SQUARE) {
@@ -115,7 +105,6 @@ void testing(struct nn* node, struct HashTable* ht, int method, int size) {
             }
 #endif
 #ifdef HASH_CHAIN
-            // printf("c %d ", i);
             int found = HT_CH_Search(key, ht);
 #endif
         }
