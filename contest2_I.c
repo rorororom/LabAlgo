@@ -44,7 +44,6 @@ struct node* New(char *data, char* name, int flag) {
     return node;
 }
 
-
 struct node* RightRotate(struct node *n) {
     assert(n);
 
@@ -84,39 +83,54 @@ struct node* Splay(struct node* root, char* key) {
     if (root == NULL || СustomStrcmp(root->data, key) == 0)
         return root;
 
-    if (СustomStrcmp(root->data, key) > 0) {
-        if (root->left == NULL) return root;
+    struct node* header = NewNode();
+    struct node* leftMax = header;
+    struct node* rightMin = header;
+    struct node* leftTail = header;
+    struct node* rightTail = header;
 
-        if (СustomStrcmp(root->left->data, key) > 0) {
-            root->left->left = Splay(root->left->left, key);
+    while (1) {
+        int cmp = СustomStrcmp(root->data, key);
 
-            root = RightRotate(root);
+        if (cmp == 0)
+            break;
+
+        if (cmp > 0) {
+            if (root->left == NULL)
+                break;
+
+            if (СustomStrcmp(root->left->data, key) > 0) {
+                root = RightRotate(root);
+                if (root->left == NULL)
+                    break;
+            }
+
+            rightTail->left = root;
+            rightTail = root;
+            root = root->left;
+        } else {
+            if (root->right == NULL)
+                break;
+
+            if (СustomStrcmp(root->right->data, key) < 0) {
+                root = LeftRotate(root);
+                if (root->right == NULL)
+                    break;
+            }
+
+            leftTail->right = root;
+            leftTail = root;
+            root = root->right;
         }
-        else if (СustomStrcmp(root->left->data, key) < 0)  {
-            root->left->right = Splay(root->left->right, key);
-
-            if (root->left->right != NULL)
-                root->left = LeftRotate(root->left);
-        }
-
-        return (root->left == NULL)? root: RightRotate(root);
     }
-    else {
-        if (root->right == NULL) return root;
 
-        if (СustomStrcmp(root->right->data, key) > 0) {
-            root->right->left = Splay(root->right->left, key);
+    leftTail->right = root->left;
+    rightTail->left = root->right;
+    root->left = header->right;
+    root->right = header->left;
+    free(header);
 
-            if (root->right->left != NULL)
-                root->right = RightRotate(root->right);
-        }
-        else if (СustomStrcmp(root->right->data, key) < 0) {
-            root->right->right = Splay(root->right->right, key);
-            root = LeftRotate(root);
-        }
-
-        return (root->right == NULL)? root: LeftRotate(root);
-    }
+    return root;
 }
 
 struct node* InsertRight(struct node* root, struct node* newNode) {
@@ -171,15 +185,21 @@ void Search(struct node** root, char *key) {
 }
 
 void Free(struct node* root) {
-    if (root == NULL)
-        return;
+    while (root != NULL) {
+        struct node* temp = root;
 
-    Free(root->left);
-    Free(root->right);
+        if (root->left != NULL) {
+            root = root->left;
+            temp->left = NULL;
+        } else {
+            root = root->right;
+            temp->right = NULL;
+        }
 
-    free(root->name);
-    free(root->data);
-    free(root);
+        free(temp->name);
+        free(temp->data);
+        free(temp);
+    }
 }
 
 #define MAX_LENGTH 1000
@@ -189,39 +209,39 @@ int main() {
     FILE* output = stdout;
 
     int N = 0;
-    int res = fscanf(stdin, "%d", &N);
+    int res = fscanf(input, "%d", &N);
     if (res != 1) {
-        fprintf(stdout, "не считалось\n");
+        fprintf(output, "не считалось\n");
         return 1;
     }
 
-    char input1[MAX_LENGTH];
-    char input2[MAX_LENGTH];
+    char* callSign = (char*)calloc(MAX_LENGTH, sizeof(char));
+    char* name     = (char*)calloc(MAX_LENGTH, sizeof(char));
 
     struct node* root = NULL;
 
-    for (int i = 0; i < N; i++) {
-        res = fscanf(stdin, "%s %s", input1, input1);
+    for (size_t i = 0; i < N; i++) {
+        res = fscanf(input, "%999s %999s", callSign, name);  // 999 ---> без учета '\0'
         if (res != 2) {
-            fprintf(stdout, "не считалось\n");
+            fprintf(output, "не считалось\n");
             return 1;
         }
 
-        root = Insert(root, input1, input2, 0);
-        root = Insert(root, input2, input1, 1);
+        root = Insert(root, callSign, name, 0);
+        root = Insert(root, name, callSign, 1);
     }
 
-    res = sscanf(stdin, "%d", &N);
+    res = fscanf(input, "%d", &N);
     if (res != 1) {
-        fprintf(stdout, "не считалось\n");
+        fprintf(output, "не считалось\n");
         return 1;
     }
 
-    for (int i = 0; i < N; i++) {
-        fscanf(stdin, "%s", input1);
+    for (size_t i = 0; i < N; i++) {
+        fscanf(input, "%999s", callSign);
 
-        Search(&root, input1);
-        fprintf(stdout, "%s\n", root->name);
+        Search(&root, callSign);
+        fprintf(output, "%s\n", root->name);
     }
 
     Free(root);
