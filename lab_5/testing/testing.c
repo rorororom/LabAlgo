@@ -19,10 +19,6 @@
 #define MAX_TEST_SIZE 1000000
 #define INIT_CAP 10000
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <stdbool.h>
-
 typedef struct nn {
     char op;
     int key;
@@ -125,7 +121,7 @@ int main() {
     clock_t start, end;
     double cpu_time_used;
 
-    FILE* result = fopen("../res/result2_p3_chain.txt", "w");
+    FILE* result = fopen("../res/result2_p3_two.txt", "w");
     if (result == NULL) {
         printf("Error opening input file");
         return 1;
@@ -136,14 +132,12 @@ int main() {
         printf("size = %d\n", size);
 #ifdef HASH_OPEN
         struct HashTable* ht = HT_Create(TWO_HASH, size);
-        printf("%d %d %d %d\n", ht->coeff->A, ht->coeff->B, ht->coeff->P, ht->length);
 #endif
 #ifdef HASH_CHAIN
         struct HashTable* ht = HT_CH_Create(size);
 #endif
 
         char filename[256];
-        printf("%d\n", i);
         snprintf(filename, sizeof(filename), "../array_tests/test2_%d.txt", i);
 
         nn* nodes = readData(filename, i);

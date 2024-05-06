@@ -114,7 +114,7 @@ int main() {
     while (load_factor < cnt) {
 #ifdef OPEN_HASH
         struct HashTable* ht = HT_Create(TWO_HASH, (int)(SIZE_TESTS / load_factor));
-        double time_taken = MeasureInsertionTime(data, ht, LINEAR);
+        double time_taken = MeasureInsertionTime(data, ht, TWO_HASH);
 #endif
 
 #ifdef METHOD_CHAIN
