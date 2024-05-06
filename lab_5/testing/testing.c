@@ -3,8 +3,8 @@
 #include <stdbool.h>
 #include <time.h>
 
-// #define HASH_OPEN
-#define HASH_CHAIN
+#define HASH_OPEN
+// #define HASH_CHAIN
 
 #ifdef HASH_OPEN
 #include "../implementation_hash_table/open_hash.h"
@@ -31,14 +31,12 @@ nn* readData(const char* testFile, int size) {
         return NULL;
     }
 
-    // Выделяем память под массив структур Node
     nn* nodes = (nn*)malloc(size * sizeof(nn));
     if (nodes == NULL) {
         fprintf(stderr, "Ошибка выделения памяти\n");
         exit(1);
     }
 
-    // Считываем данные из файла в массив
     for (int i = 0; i < size; i++) {
         char op;
         int key;
@@ -56,7 +54,6 @@ nn* readData(const char* testFile, int size) {
 }
 
 void testing(struct nn* node, struct HashTable* ht, int method, int size) {
-
     int key;
     char op;
 
@@ -121,24 +118,23 @@ int main() {
     clock_t start, end;
     double cpu_time_used;
 
-    FILE* result = fopen("../res/result2_p3_two.txt", "w");
+    FILE* result = fopen("../res/result2_p3_square.txt", "w");
     if (result == NULL) {
         printf("Error opening input file");
         return 1;
     }
 
-    for (int i = 2 * TEST_STEP; i <= MAX_TEST_SIZE; i += TEST_STEP) {
+    for (int i = TEST_STEP; i <= MAX_TEST_SIZE; i += TEST_STEP) {
         int size = GenerSizeHT(i);
-        printf("size = %d\n", size);
 #ifdef HASH_OPEN
-        struct HashTable* ht = HT_Create(TWO_HASH, size);
+        struct HashTable* ht = HT_Create(SQUARE, size);
 #endif
 #ifdef HASH_CHAIN
         struct HashTable* ht = HT_CH_Create(size);
 #endif
 
         char filename[256];
-        snprintf(filename, sizeof(filename), "../array_tests/test2_%d.txt", i);
+        snprintf(filename, sizeof(filename), "../arr_tests/test2_%d.txt", i);
 
         nn* nodes = readData(filename, i);
         if (nodes == NULL) {

@@ -45,8 +45,10 @@ void InserKeysFromFile(int* data, struct HashTable* ht, int method) {
             HT_InsertLinear(data[i], ht);
         else if (method == SQUARE)
             HT_InsertSquare(data[i], ht);
-        else
+        else {
+            printf("%d\n", i);
             HT_InsertTwoHash(data[i], ht);
+        }
     }
 #endif
 
@@ -106,12 +108,13 @@ int* ReadDataFromFile(const char* filename) {
 }
 
 int main() {
-    FILE* results_file = OpenFile("open_hash_twohash.txt", "w");
-    int* data = ReadDataFromFile("../arr_teste/coll.txt");
+    FILE* results_file = OpenFile("../res/two_hash.txt", "w");
+    int* data = ReadDataFromFile("../arr_tests/coll.txt");
 
     float load_factor = 0.1;
     float cnt = 1.0;
     while (load_factor < cnt) {
+        printf("%f\n", load_factor);
 #ifdef OPEN_HASH
         struct HashTable* ht = HT_Create(TWO_HASH, (int)(SIZE_TESTS / load_factor));
         double time_taken = MeasureInsertionTime(data, ht, TWO_HASH);

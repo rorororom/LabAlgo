@@ -1,16 +1,16 @@
-#include "hash_func.h"
 #include <math.h>
 #include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 
+#include "hash_func.h"
 
 size_t HashFunc(Coeff* c, int key, size_t size) {
     return ((c->A * key + c->B) % c->P) & (size - 1);
 }
 
 int HashFuncDreams(int key, int length) {
-    int hash = 1 + (key % (length - 1));
+    int hash = (2 * key + 1) & (length - 1);
     return hash;
 }
 

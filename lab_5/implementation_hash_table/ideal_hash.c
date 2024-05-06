@@ -1,34 +1,31 @@
-#include <limits.h>
-#include <stdio.h>
-#include <stdlib.h>
 #include <assert.h>
-#include <math.h>
+#include <stdlib.h>
 #include <time.h>
-#include <string.h>
-
-
 #include "ideal_hash.h"
 
-bool Coprime(int a, int b) {
-    while (b != 0) {
-        int temp = b;
-        b = a % b;
-        a = temp;
-    }
-    return a == 1;
+bool Coprime(int32_t a, int32_t b) {
+    if (!a || !b) return false; // or true idk
+
+    int32_t shift = __builtin_ctz((uint32_t) a | (uint32_t) b);
+    a >>= __builtin_ctz((uint32_t) a);
+    do
+    {
+        b >>= __builtin_ctz((uint32_t) b);
+        if (a > b) {int32_t tmp = a; a = b; b = tmp;}
+        b -= a;
+    } while (b);
+
+    return (a << shift) == 1;
 }
 
 /**
  * @brief Нахождение ближайшей меньшей степени двойки для заданного числа
- * @param N Число, для которого нужно найти ближайшую меньшую степень двойки
+ * @param num Число, для которого нужно найти ближайшую меньшую степень двойки
  * @return Ближайшая меньшая степень двойки
  */
-int NearestLowerPowerOfTwo(int N) {
-    int power = 1;
-    while (power < N) {
-        power <<= 1;
-    }
-    return power;
+int32_t NearPowTwo(int32_t num) {
+    if (num == 0) num = 1;
+    return 1 << (32 - __builtin_clz(num));
 }
 
 /**
@@ -53,10 +50,6 @@ void GenerateCoeff(int* A, int* B, int size) {
     (*A) = GenerateA(3, COEFF_P);
     (*B) = rand() %  size;
 };
-
-// void GenerateSecondaryHashTable(struct HashTable* hashTable, int* collisions, int* arr, size_t N) {
-//
-// }
 
 void BuildHashTable(struct HashTable* hashTable, int* arr, int N) {
     GenerateCoeff(&hashTable->coeff.A, &hashTable->coeff.B, hashTable->size);
@@ -99,7 +92,7 @@ void BuildHashTable(struct HashTable* hashTable, int* arr, int N) {
         assert(hashTable->table[i].arr);
     }
 
-     HashTableLevelTwo* htSecondLevel = (HashTableLevelTwo*)malloc(hashTable->size * sizeof(HashTableLevelTwo));
+    HashTableLevelTwo* htSecondLevel = (HashTableLevelTwo*)malloc(hashTable->size * sizeof(HashTableLevelTwo));
     for (int i = 0; i < hashTable->size; i++) {
         htSecondLevel[i].arr = (int*)calloc(collisions[i], sizeof(int));
         htSecondLevel[i].size = 0;
@@ -114,8 +107,6 @@ void BuildHashTable(struct HashTable* hashTable, int* arr, int N) {
     }
 
     for (int i = 0; i < hashTable->size; i++) {
-        int* temp_arr = (int*)calloc(hashTable->table[i].size, sizeof(int));
-
         if (hashTable->table[i].size > 0) {
                 GenerateCoeff(&hashTable->table[i].coeff.A, &hashTable->table[i].coeff.B, hashTable->table[i].size);
         }
@@ -127,24 +118,23 @@ void BuildHashTable(struct HashTable* hashTable, int* arr, int N) {
 
             int hashValue = Hash(key, hashTable->table[i].coeff.A, hashTable->table[i].coeff.B, hashTable->table[i].size);
 
-            if (temp_arr[hashValue] != 0) {
+            if (hashTable->table[i].arr[hashValue] != 0) {
                     GenerateCoeff(&hashTable->table[i].coeff.A, &hashTable->table[i].coeff.B, hashTable->table[i].size);
 
                 for (int as = 0; as < hashTable->table[i].size; as++) {
-                    temp_arr[as] = 0;
+                    hashTable->table[i].arr[as] = 0;
                 }
-                j = -1;
+                j = -1; // потому что после выхода из тела цикла происходит ++
+                        // так как в ассемблерном коде в конце тела цикла происходит dec регистра
+                        // а я обнуляю счетчик до инкремента
+                        // следовательно, если ставить 0, то счетчик будет идти с 1
             } else {
-                temp_arr[hashValue] = key;
+                hashTable->table[i].arr[j] = key;
             }
         }
-
-        for (int j = 0; j < hashTable->table[i].size; j++) {
-            hashTable->table[i].arr[j] = temp_arr[j];
-        }
-
-        free(temp_arr);
     }
+
+    free(htSecondLevel);
 }
 
 

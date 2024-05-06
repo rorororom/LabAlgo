@@ -14,7 +14,7 @@ typedef struct {
 Operation* generate_operations_p2(int size) {
     Operation *operations = malloc(size * sizeof(Operation));
     for (int i = 0; i < size; i++) {
-        operations[i].op = "?"[rand() % 1];
+        operations[i].op = "+-?"[rand() % 3];
         operations[i].key = rand() % (size * 10);
     }
     return operations;
@@ -65,7 +65,7 @@ int main() {
         Operation *operations = generate_operations_p3(test_size);
         char filename[50];
 
-        snprintf(filename, sizeof(filename), "../array_tests2/test2_%d.txt", i);
+        snprintf(filename, sizeof(filename), "../arr_tests/test2_%d.txt", i);
 
         save_operations_to_file(filename, operations, test_size); // Вызов функции для записи операций в файл
 

@@ -8,7 +8,8 @@
 #include "metod_chain.h"
 #include "hash_func.h"
 
-const int CNT_ELEMENT = 1000000;
+const int   CNT_ELEMENT     = 1000000;
+const int   REHASH_FACTOR   = 2;
 const float LOAD_FACTOR_HTC = 0.75; // Hash Table method Chain
 
 //====================================================================================
@@ -81,7 +82,7 @@ void HT_CH_Destroy(struct HashTable* ht) {
 void HT_CH_Rehash(struct HashTable* ht) {
     assert(ht);
 
-    size_t new_length = ht->length * 2;
+    size_t new_length = ht->length * REHASH_FACTOR;
     List* new_array = (List*)calloc(new_length, sizeof(List));
     assert(new_array);
 

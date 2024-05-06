@@ -7,7 +7,8 @@
 #include "open_hash.h"
 #include "hash_func.h"
 
-const int CNT_ELEMENT = 1000000;
+const int   CNT_ELEMENT     = 1000000;
+const int   REHASH_FACTOR   = 2;
 const float LOAD_FACTOR_HTO = 0.75;
 
 #define NOT_FOUND -1
@@ -81,7 +82,7 @@ void CheckAndRehash(struct HashTable* ht) {
 
     float load_factor = (float)(ht->size )/ (float)(ht->length);
     if (load_factor > LOAD_FACTOR_HTO) {
-        int new_length = ht->length * 2;
+        int new_length = ht->length * REHASH_FACTOR;
         HT_Rehash(ht, new_length);
     }
 }
@@ -99,7 +100,7 @@ void HT_InsertLinear(int key, HashTable* ht) {
     int index = HashFunc(ht->coeff, key, ht->length);
 
     while (ht->table[index].status == OCCUPIED) {
-        if(ht->table[index].key == key && ht->table[index].status  == OCCUPIED) {
+        if(ht->table[index].key == key) {
             return;
         }
 
@@ -123,12 +124,12 @@ void HT_InsertSquare(int key, HashTable* ht) {
     int i = 1;
 
     while (ht->table[index].status == OCCUPIED) {
-        if (ht->table[index].key == key && ht->table[index].status == OCCUPIED){
+        if (ht->table[index].key == key){
             return;
         }
 
         index += i;
-        index = index % (ht->length - 1);
+        index = index & (ht->length - 1);
         i++;
     }
 
@@ -144,18 +145,16 @@ void HT_InsertTwoHash(int key, HashTable* ht) {
 
     CheckAndRehash(ht);
 
-    int h1 = HashFunc(ht->coeff, key, ht->length);
-
-    int index = h1;
-    int i = 0;
+    int hash1 = HashFunc(ht->coeff, key, ht->length);
+    int hash2 = HashFuncDreams(key , ht->length);
+    int index = hash1;
 
     while (ht->table[index].status == OCCUPIED) {
-        if (ht->table[index].key == key && ht->table[index].status == OCCUPIED){
+        if (ht->table[index].key == key){
             return;
         }
-        index += HashFuncDreams(key + i , ht->length);
+        index += hash2;
         index = index & (ht->length - 1);
-        i++;
     }
 
     ht->table[index].status = OCCUPIED;
@@ -175,7 +174,7 @@ int HT_SearchLinear(int key, struct HashTable* ht) {
     int index = HashFunc(ht->coeff, key, ht->length);
 
     while (ht->table[index].status == OCCUPIED) {
-        if (ht->table[index].key == key && ht->table[index].status == OCCUPIED) {
+        if (ht->table[index].key == key) {
             return index;
         }
         index = (index + 1) & (ht->length - 1);
@@ -193,11 +192,11 @@ int HT_SearchQuadratic(int key, struct HashTable* ht) {
     int index = hash;
 
     while (ht->table[index].status == OCCUPIED) {
-        if (ht->table[index].key == key && ht->table[index].status == OCCUPIED) {
+        if (ht->table[index].key == key) {
             return index;
         }
         index += i;
-        index = index % (ht->length - 1);
+        index = index & (ht->length - 1);
         i++;
     }
 
@@ -211,20 +210,17 @@ int HT_SearchDoubleHashing(int key, struct HashTable* ht) {
 
     int hash1 = HashFunc(ht->coeff, key, ht->length);
     int index = hash1;
-    int i = 0;
     int hash2 = HashFuncDreams(key, ht->length);
 
     while (ht->table[index].status == OCCUPIED) {
+        if (ht->table[index].key == key) {
+            return index;
+        }
         index += hash2;
         index = index & (ht->length - 1);
-        i++;
     }
 
-    if (ht->table[index].key == key && ht->table[index].status == OCCUPIED) {
-        return index;
-    } else {
-        return NOT_FOUND;
-    }
+    return NOT_FOUND;
 }
 
 
@@ -235,14 +231,18 @@ int HT_SearchDoubleHashing(int key, struct HashTable* ht) {
 void HT_RemoveKey(int key, HashTable* ht) {
     int index = 0;
 
-    if (ht->hash_method == LINEAR) {
-        index = HT_SearchLinear(key, ht);
-
-    } else if (ht->hash_method == SQUARE) {
-        index = HT_SearchQuadratic(key, ht);
-
-    } else {
-        index = HT_SearchDoubleHashing(key, ht);
+    switch(ht->hash_method) {
+        case LINEAR:
+            index = HT_SearchLinear(key, ht);
+            break;
+        case SQUARE:
+            index = HT_SearchQuadratic(key, ht);
+            break;
+        case TWO_HASH:
+            index = HT_SearchDoubleHashing(key, ht);
+            break;
+        default:
+            return;
     }
 
     if (index != NOT_FOUND) {

@@ -4,6 +4,7 @@
 #define COEFF_P 1000000007
 
 #include <stdbool.h>
+#include <stdint.h>
 
 /**
  * @brief Структура для хранения коэффициентов A и B.
@@ -34,16 +35,9 @@ typedef struct HashTable {
     HashTableLevelTwo* table; /**< Массив вторичных хэш-таблиц */
 } HashTable;
 
-/**
- * @brief Проверка, являются ли два числа взаимно простыми
- * @param a Первое число
- * @param b Второе число
- * @return true, если a и b взаимно просты, иначе false
- */
-
 void BuildHashTable(struct HashTable* hashTable, int* arr, int N);
 bool HT_ID_Search  (struct HashTable* hashTable, int value);
 
-int NearestLowerPowerOfTwo(int N);
+int32_t NearPowTwo(int32_t num);
 
 #endif

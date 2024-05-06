@@ -7,8 +7,8 @@
 #define NUMBERS_TO_READ 100000
 #define SEARCH_ITERATIONS 10000000
 
-// #define IDEAL_HASH
-#define OPEN_HASH
+#define IDEAL_HASH
+// #define OPEN_HASH
 // #define METHOD_CHAIN
 
 #ifdef OPEN_HASH
@@ -49,9 +49,9 @@ int main() {
     clock_t start, end;
     double cpu_time_used;
 
-    FILE* file = fopen("../array_tests/p3_insert.txt", "r");
+    FILE* file = fopen("../arr_tests/int.txt", "r");
     if (file == NULL) {
-        printf("Error opening input file: %s\n", file);
+        printf("Error opening input file");
         return 1;
     }
 
@@ -68,9 +68,9 @@ int main() {
 
     fclose(file);
 
-    FILE* file_search = fopen("../array_tests/p3.txt", "r");
+    FILE* file_search = fopen("../arr_tests/int1.txt", "r");
     if (file_search == NULL) {
-        printf("Error opening input file: %s\n", file_search);
+        printf("Error opening input file");
         return 1;
     }
 
@@ -88,8 +88,7 @@ int main() {
     fclose(file_search);
 
 #ifdef IDEAL_HASH
-    int size = NearestLowerPowerOfTwo(NUMBERS_TO_READ);
-    printf("size = %d\n", size);
+    int size = NearPowTwo(NUMBERS_TO_READ);
 
     HashTable hashTable;
     hashTable.size = size;
@@ -116,7 +115,7 @@ int main() {
 #endif
 
     start = clock();
-    testing(hashTable, arr_search);
+    testing(&hashTable, arr_search);
     end = clock();
 
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
