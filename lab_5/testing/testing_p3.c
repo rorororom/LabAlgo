@@ -7,9 +7,9 @@
 #define NUMBERS_TO_READ 100000
 #define SEARCH_ITERATIONS 10000000
 
-#define IDEAL_HASH
+// #define IDEAL_HASH
 // #define OPEN_HASH
-// #define METHOD_CHAIN
+#define METHOD_CHAIN
 
 #ifdef OPEN_HASH
 #include "../implementation_hash_table/open_hash.h"
@@ -88,7 +88,7 @@ int main() {
     fclose(file_search);
 
 #ifdef IDEAL_HASH
-    int size = NearPowTwo(NUMBERS_TO_READ);
+    int size = GenerSizeHT(NUMBERS_TO_READ);
 
     HashTable hashTable;
     hashTable.size = size;
@@ -115,7 +115,12 @@ int main() {
 #endif
 
     start = clock();
+#ifdef IDEAL_HASH
     testing(&hashTable, arr_search);
+#else
+    testing(hashTable, arr_search);
+#endif
+
     end = clock();
 
     cpu_time_used = ((double) (end - start)) / CLOCKS_PER_SEC;
