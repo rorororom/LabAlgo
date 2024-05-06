@@ -3,14 +3,14 @@
 #include <time.h>
 
 #define FEN
-// #define DO
+// #define SEGMENT_TREE
 
 #ifdef FEN
 #include "../RSQ/Fenwik.h"
 #endif
 
-#ifdef DO
-#include "../RSQ/DO.h"
+#ifdef SEGMENT_TREE
+#include "../RSQ/SEGMENT_TREE.h"
 #endif
 
 const int N = 1000000;
@@ -31,7 +31,7 @@ void measureTime(int* tree, int* arr, Segment* segments, int n) {
 #endif
     }
 
-#ifdef DO
+#ifdef SEGMENT_TREE
     build(tree, arr, 1, 0, N - 1);
 #endif
 
@@ -41,7 +41,7 @@ void measureTime(int* tree, int* arr, Segment* segments, int n) {
 #ifdef FEN
             long long  sum = getSum(tree, segments[i].start, segments[i].end);
 #endif
-#ifdef DO
+#ifdef SEGMENT_TREE
             long long sum = query(tree, 1, 0, n - 1, segments[i].start - 1, segments[i].end - 1);
             //printf("sum = %lld\n", sum);
 #endif
@@ -104,7 +104,7 @@ int main() {
     fclose(file);
 
     int* tree = NULL;
-#ifdef DO
+#ifdef SEGMENT_TREE
     tree = (int*) calloc(N * 4, sizeof(int));
 #endif
 #ifdef FEN

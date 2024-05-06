@@ -1,14 +1,15 @@
-#include "sparse_table.h"
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
 #include <assert.h>
 
+#include "sparse_table.h"
+
 int min(int a, int b) {
     return (a < b) ? a : b;
 }
 
-int** buildTableVar1(int* arr, int n, int* log_table) {
+int** buildTableRowMajor(int* arr, int n, int* log_table) {
     assert(log_table);
     assert(arr);
     assert(n >= 0);
@@ -26,7 +27,7 @@ int** buildTableVar1(int* arr, int n, int* log_table) {
     return table1;
 }
 
-int** buildTableVar2(int* arr, int n, int* log_table) {
+int** buildTableColumnMajor(int* arr, int n, int* log_table) {
     assert(log_table);
     assert(arr);
     assert(n >= 0);
@@ -49,30 +50,30 @@ int** buildTableVar2(int* arr, int n, int* log_table) {
 
 int** ctorTable(int* arr, int n, int* log_table, bool var) {
     if (var) {
-        return buildTableVar2(arr, n, log_table);
+        return buildTableRowMajor(arr, n, log_table);
     } else {
-        return buildTableVar1(arr, n, log_table);
+        return buildTableColumnMajor(arr, n, log_table);
     }
 }
 
 // предполагается, что отрезки будут искаться с индексации 1
 
-int queryVar1(int** table1, int l, int r, int* log_table) {
-    assert(table1);
+int queryRowMajor(int** table_row_major, int l, int r, int* log_table) {
+    assert(table_row_major);
     assert(log_table);
 
     int len = r - l + 1;
     int k = log_table[len];
-    return min(table1[l][k], table1[r - (1 << k) + 1][k - 1]);
+    return min(table_row_major[l][k], table_row_major[r - (1 << k) + 1][k - 1]);
 }
 
-int queryVar2(int** table2, int l, int r, int* log_table) {
-    assert(table2);
+int queryColumnMajor(int** table_column_major, int l, int r, int* log_table) {
+    assert(table_column_major);
     assert(log_table);
 
     int len = r - l + 1;
     int k = log_table[len];
-    return min(table2[k][l], table2[k][r - (1 << k) + 1]);
+    return min(table_column_major[k][l], table_column_major[k][r - (1 << k) + 1]);
 }
 
 int query(int** table, int l, int r, int* log_table, bool var) {
@@ -80,9 +81,9 @@ int query(int** table, int l, int r, int* log_table, bool var) {
     assert(log_table);
 
     if (var) {
-        return queryVar2(table, l, r, log_table);
+        return queryRowMajor(table, l, r, log_table);
     } else {
-        return queryVar1(table, l, r, log_table);
+        return queryColumnMajor(table, l, r, log_table);
     }
 }
 
@@ -98,31 +99,30 @@ int* computeLogTable(int n) {
     return log;
 }
 
-void freeSparseTableVar1(int** table1, int n) {
-    if (table1 == NULL) return;
+void freeSparseTableRowMajor(int** table_row_major, int n) {
+    if (table_row_major == NULL) return;
 
     for (int j = 1; (1 << j) <= n; j++) {
-        free(table1[j]);
+        free(table_row_major[j]);
     }
 
-    free(table1);
+    free(table_row_major);
 }
 
-void freeSparseTableVar2(int** table2, int n, int* log_table) {
-    if (table2 == NULL || log_table == NULL) return;
+void freeSparseTableColumnMajor(int** table_column_major, int n, int* log_table) {
+    if (table_column_major == NULL || log_table == NULL) return;
 
     for (int j = 0; j <= log_table[n]; j++) {
-        free(table2[j]);
+        free(table_column_major[j]);
     }
 
-    free(table2);
+    free(table_column_major);
 }
 
-void freeSparseTable(int** table, int n, int* log_table, bool var) {
-    if (var) {
-        freeSparseTableVar2(table, n, log_table);
+void freeSparseTable(int** table, int n, int* log_table, bool row_major) {
+    if (row_major) {
+        freeSparseTableRowMajor(table, n);
     } else {
-        freeSparseTableVar1(table, n);
+        freeSparseTableColumnMajor(table, n, log_table);
     }
 }
-
