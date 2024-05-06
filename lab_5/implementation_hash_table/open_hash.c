@@ -8,7 +8,7 @@
 #include "hash_func.h"
 
 const int CNT_ELEMENT = 1000000;
-const float LOAD_FACTOR_HTO = 0.75; // Hast Table Open hash
+const float LOAD_FACTOR_HTO = 0.75;
 
 #define NOT_FOUND -1
 
@@ -153,7 +153,7 @@ void HT_InsertTwoHash(int key, HashTable* ht) {
         if (ht->table[index].key == key && ht->table[index].status == OCCUPIED){
             return;
         }
-        index += hash_func_dreams(key + i , ht->length);
+        index += HashFuncDreams(key + i , ht->length);
         index = index & (ht->length - 1);
         i++;
     }
@@ -212,9 +212,10 @@ int HT_SearchDoubleHashing(int key, struct HashTable* ht) {
     int hash1 = HashFunc(ht->coeff, key, ht->length);
     int index = hash1;
     int i = 0;
+    int hash2 = HashFuncDreams(key, ht->length);
 
     while (ht->table[index].status == OCCUPIED) {
-        index += hash_func_dreams(key + i, ht->length);
+        index += hash2;
         index = index & (ht->length - 1);
         i++;
     }

@@ -53,7 +53,7 @@ int main() {
 
     test_hash_function(keys, collisions_remainder, hash_remainder);
     test_hash_function(keys, collisions_bitwise, hash_bitwise);
-    test_hash_function(keys, collisions_multiplication, hash_multiplication);
+    test_hash_function(keys, collisions_multiplication, HashMultiplication);
 
     write_collisions_to_file("res/collisions_remainder.txt", collisions_remainder);
     write_collisions_to_file("res/collisions_bitwise.txt", collisions_bitwise);

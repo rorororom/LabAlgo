@@ -90,8 +90,6 @@ void BuildHashTable(struct HashTable* hashTable, int* arr, int N) {
 
     }
 
-    printf("aaaa\n");
-
     for (int i = 0; i < hashTable->size; i++) {
         hashTable->table[i].size = collisions[i] * collisions[i];
         if (hashTable->table[i].size == 0) {
@@ -101,7 +99,6 @@ void BuildHashTable(struct HashTable* hashTable, int* arr, int N) {
         assert(hashTable->table[i].arr);
     }
 
-    printf("bbb\n");
      HashTableLevelTwo* htSecondLevel = (HashTableLevelTwo*)malloc(hashTable->size * sizeof(HashTableLevelTwo));
     for (int i = 0; i < hashTable->size; i++) {
         htSecondLevel[i].arr = (int*)calloc(collisions[i], sizeof(int));
@@ -116,19 +113,12 @@ void BuildHashTable(struct HashTable* hashTable, int* arr, int N) {
         htSecondLevel[hashValue].arr[htSecondLevel[hashValue].size++]= key;
     }
 
-    printf("cccc\n");
     for (int i = 0; i < hashTable->size; i++) {
         int* temp_arr = (int*)calloc(hashTable->table[i].size, sizeof(int));
 
         if (hashTable->table[i].size > 0) {
                 GenerateCoeff(&hashTable->table[i].coeff.A, &hashTable->table[i].coeff.B, hashTable->table[i].size);
         }
-
-        // printf("%d ", i);
-        // for (int q = 0; q < htSecondLevel[i].size; q++) {
-        //     printf("%d ", htSecondLevel[i].arr[q]);
-        // }
-        // printf("\n\n\n");
 
         for (int j = 0; j < htSecondLevel[i].size; j++) {
             int key = htSecondLevel[i].arr[j];
@@ -155,7 +145,6 @@ void BuildHashTable(struct HashTable* hashTable, int* arr, int N) {
 
         free(temp_arr);
     }
-    printf("bbb\n");
 }
 
 

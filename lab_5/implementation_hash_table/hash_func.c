@@ -9,17 +9,17 @@ size_t HashFunc(Coeff* c, int key, size_t size) {
     return ((c->A * key + c->B) % c->P) & (size - 1);
 }
 
-int hash_func_dreams(int key, int length) {
-    int hash = (key + 1) % (length - 2);
+int HashFuncDreams(int key, int length) {
+    int hash = 1 + (key % (length - 1));
     return hash;
 }
 
-int getRandomNumber(int min, int max) {
+int GetRandomNumber(int min, int max) {
     return min + rand() % (max - min + 1);
 }
 
 int GetRand(size_t left_border, size_t right_border) {
-    return getRandomNumber(left_border, right_border) | 1;
+    return GetRandomNumber(left_border, right_border) | 1;
 }
 
 struct Coeff* HashGetCoeff(size_t size) {
@@ -44,7 +44,7 @@ struct Coeff* HashGetCoeff(size_t size) {
     return c;
 }
 
-int hash_multiplication(int key, int length) {
+int HashMultiplication(int key, int length) {
     double A = 0.618033; // константа предложена Кнутом (см. Томас Кормен стр. 296)
     int h = (int)(((long double)(length) * fmod(key * A, 1))) % (int)(length);
 

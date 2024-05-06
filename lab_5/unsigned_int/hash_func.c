@@ -24,7 +24,7 @@ unsigned int hash_bitwise(unsigned int key) {
 }
 
 // Метод умножения с константой
-unsigned int hash_multiplication(unsigned int key) {
+unsigned int HashMultiplication(unsigned int key) {
     double A = 0.618033;
     int h = MODULE * fmod(key * A, 1);
 
