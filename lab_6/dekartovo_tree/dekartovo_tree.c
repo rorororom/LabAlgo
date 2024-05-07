@@ -105,28 +105,3 @@ void deleteTree(pnode t) {
 }
 
 
-// int main() {
-//     pnode root = NULL;
-//
-//     char operation[10];
-//     int x;
-//     while (scanf("%s", operation) > 0) {
-//         scanf("%d", &x);
-//         if (strcmp(operation, "insert") == 0) {
-//             if (!exists(root, x)) {
-//                 pnode newnode = createNode(x);
-//                 if (newnode != NULL) {
-//                     insert(&root, newnode);
-//                 }
-//             }
-//         } else if (strcmp(operation, "delete") == 0) {
-//             if (exists(root, x)) {
-//                 erase(&root, x);
-//             }
-//         } else if (strcmp(operation, "exists") == 0) {
-//             printf("%s\n", exists(root, x) ? "true" : "false");
-//         }
-//     }
-//
-//     return 0;
-// }

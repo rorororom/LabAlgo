@@ -42,33 +42,54 @@ struct node* Splay(struct node* root, int key) {
     if (root == NULL || root->key == key)
         return root;
 
-    if (root->key > key) {
-        if (root->left == NULL) return root;
-        if (root->left->key > key) {
-            root->left->left = Splay(root->left->left, key);
-            root = RightRotate(root);
+    struct node* header = NewNode(key);
+    struct node* leftMax = header;
+    struct node* rightMin = header;
+    struct node* leftTail = header;
+    struct node* rightTail = header;
+
+    while (1) {
+        if (root->key == key)
+            break;
+
+        if (root->key > key) {
+            if (root->left == NULL)
+                break;
+
+            if (root->left->key > key) {
+                root = RightRotate(root);
+                if (root->left == NULL)
+                    break;
+            }
+
+            rightTail->left = root;
+            rightTail = root;
+            root = root->left;
+        } else {
+            if (root->right == NULL)
+                break;
+
+            if (root->right->key < key) {
+                root = LeftRotate(root);
+                if (root->right == NULL)
+                    break;
+            }
+
+            leftTail->right = root;
+            leftTail = root;
+            root = root->right;
         }
-        else if (root->left->key < key)  {
-            root->left->right = Splay(root->left->right, key);
-            if (root->left->right != NULL)
-                root->left = LeftRotate(root->left);
-        }
-        return (root->left == NULL)? root: RightRotate(root);
     }
-    else {
-        if (root->right == NULL) return root;
-        if (root->right->key > key) {
-            root->right->left = Splay(root->right->left, key);
-            if (root->right->left != NULL)
-                root->right = RightRotate(root->right);
-        }
-        else if (root->right->key < key) {
-            root->right->right = Splay(root->right->right, key);
-            root = LeftRotate(root);
-        }
-        return (root->right == NULL)? root: LeftRotate(root);
-    }
+
+    leftTail->right = root->left;
+    rightTail->left = root->right;
+    root->left = header->right;
+    root->right = header->left;
+    free(header);
+
+    return root;
 }
+
 
 struct node* InsertRight(struct node* root, struct node* newNode) {
     newNode->right = root;
@@ -109,35 +130,28 @@ struct node* Delete(struct node* root, int key) {
     root = Splay(root, key);
 
     if (root->key != key)
-        return root; // Ключ не найден, возвращаем текущий корень
+        return root;
 
-    // Если у корня нет левого поддерева, просто возвращаем правое поддерево
     if (root->left == NULL) {
         struct node* newRoot = root->right;
         free(root);
         return newRoot;
     }
 
-    // Если у корня нет правого поддерева, просто возвращаем левое поддерево
     if (root->right == NULL) {
         struct node* newRoot = root->left;
         free(root);
         return newRoot;
     }
 
-    // Если у корня есть и левое, и правое поддерево
-    // Находим максимальный элемент в левом поддереве и делаем его новым корнем
     struct node* maxLeft = root->left;
     while (maxLeft->right != NULL)
         maxLeft = maxLeft->right;
 
-    // Устанавливаем максимальный элемент в левом поддереве в качестве корня
     root->left = Splay(root->left, maxLeft->key);
 
-    // Присоединяем правое поддерево к новому корню
     root->left->right = root->right;
 
-    // Освобождаем старый корень и возвращаем новый
     struct node* newRoot = root->left;
     free(root);
     return newRoot;
@@ -155,14 +169,19 @@ void Search(struct node** root, int key) {
 
 
 void Free(struct node* root) {
-    if (root == NULL)
-        return;
+    while (root != NULL) {
+        struct node* temp = root;
 
-    Free(root->left);
-    Free(root->right);
-    free(root);
+        if (root->left != NULL) {
+            root = root->left;
+            temp->left = NULL;
+        } else {
+            root = root->right;
+            temp->right = NULL;
+        }
+        free(temp);
+    }
 }
-
 void GenerateGraphImage();
 void GenerateImage(struct node* heap);
 static void PrintNodeDump(FILE* dotFile, struct node* root, const char* fillColor);
@@ -188,7 +207,7 @@ void GenerateImage(struct node* root)
         PrintTree(dotFile, root);
 
         fprintf(dotFile, "}\n");
-        fclose(dotFile); // Закрываем файл после записи
+        fclose(dotFile);
     }
     else
     {
@@ -216,34 +235,3 @@ void PrintTree(FILE* dotFile, struct node* root)
         }
     }
 }
-
-// #define MAX_LENGTH 1000
-//
-// int main() {
-//     int N = 0;
-//     scanf("%d", &N);
-//
-//     int input;
-//
-//     struct node* root = NULL;
-//
-//     for (int i = 0; i < N; i++) {
-//         scanf("%d", &input);
-//
-//         root = Insert(root, input);
-//     }
-//
-//     scanf("%d", &N);
-//
-//     for (int i = 0; i < N; i++) {
-//         scanf("%d", &input);
-//
-//         Search(&root, input);
-//         printf("%d\n", root->key);
-//     }
-//
-//     Free(root);
-//
-//     return 0;
-// }
-

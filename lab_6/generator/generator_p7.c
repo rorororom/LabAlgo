@@ -10,9 +10,9 @@ int randomInt(int min, int max) {
 
 void createTestFile(int count) {
     char filename[50];
-    sprintf(filename, "../array/test_%d.txt", count); // Создаем имя файла
+    sprintf(filename, "../array/test_%d.txt", count);
 
-    FILE *file = fopen(filename, "w"); // Открываем файл для записи
+    FILE *file = fopen(filename, "w");
 
     if (file == NULL) {
         printf("Ошибка при создании файла %s\n", filename);
@@ -20,7 +20,7 @@ void createTestFile(int count) {
     }
 
     for (int i = 0; i < count; i++) {
-        fprintf(file, "%d\n", randomInt(1, 1000000)); // Записываем случайное число в файл
+        fprintf(file, "%d\n", randomInt(1, 1000000));
     }
 
     fclose(file);

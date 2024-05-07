@@ -26,7 +26,7 @@ void insert(Node** root, int key) {
 
     z->parent = y;
     if (y == NULL) {
-        *root = z;  // Дерево было пустым
+        *root = z;  
     } else if (key < y->key) {
         y->left = z;
     } else {
@@ -53,14 +53,14 @@ Node* minValueNode(Node* node) {
 void deleteNode(Node** root, int key) {
     Node* z = findNode(*root, key);
 
-    if (z == NULL) return;  // Узел не найден
+    if (z == NULL) return;
 
     Node* y = NULL;
     Node* x = NULL;
     if (z->left == NULL || z->right == NULL) {
         y = z;
     } else {
-        y = minValueNode(z->right);  // Находим преемника
+        y = minValueNode(z->right);
     }
 
     if (y->left != NULL) {
