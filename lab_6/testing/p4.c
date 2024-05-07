@@ -13,8 +13,6 @@ void testing_insert(int* arr, int n, node* root) {
     for (size_t i = 0; i < n; i++) {
         root = Insert(root, arr[i]);
     }
-    // GenerateImage(root);
-    // GenerateGraphImage();
 }
 
 void testing_delete(int* arr, int n, node* root) {
@@ -61,11 +59,6 @@ int main() {
             testing_insert(arr, i, root);
             end = clock();
 
-            // if (root != NULL) {
-            //     printf("root = %d\n", root->key);
-            // } else {
-            //     printf("root is NULL\n");
-            // }
             time_insert += ((double)(end - start)) / CLOCKS_PER_SEC;
 
             start = clock();

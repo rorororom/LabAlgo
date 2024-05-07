@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define STEP 100000
+#define STEP 10000
 #define MAX_TEST 1000000
 
 #include "../AVL/avl_tree.h"
@@ -32,7 +32,7 @@ int main() {
         return 1;
     }
 
-    for (size_t i = MAX_TEST; i <= MAX_TEST; i += STEP) {
+    for (size_t i = STEP; i <= STEP; i += STEP) {
         char filename[50];
         sprintf(filename, "../array/tetsA.txt");
 
@@ -62,12 +62,13 @@ int main() {
             testing_delete(arr, i, root);
             end = clock();
             time_delete += ((double)(end - start)) / CLOCKS_PER_SEC;
-            deleteTree(root);
+
+            DeleteTree(root);
             free(root);
         }
 
-        fprintf(file_i, "%zu %f\n", i, time_insert / 5);
-        fprintf(file_d, "%zu %f\n", i, time_delete / 5);
+        printf("%zu %f\n", i, time_insert / 5);
+        printf("%zu %f\n", i, time_delete / 5);
 
         fclose(file);
     }

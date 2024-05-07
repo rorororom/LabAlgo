@@ -162,13 +162,12 @@ node* RemoveTree(node* root, int value) {
     return BalanceTree(root);
 }
 
-void deleteTree(node* root) {
+void DeleteTree(node* root) {
     if (root == NULL)
         return;
 
-    deleteTree(root->left);
-    deleteTree(root->right);
+    DeleteTree(root->left);
+    DeleteTree(root->right);
 
     free(root);
 }
-

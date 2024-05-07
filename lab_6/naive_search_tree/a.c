@@ -2,7 +2,10 @@
 #include <stdlib.h>
 #include <time.h>
 
-#include "naive_tree.h"
+typedef struct Node {
+    int key;
+    struct Node *left, *right, *parent;
+} Node;
 
 Node* newNode(int key) {
     Node* node = (Node*)malloc(sizeof(Node));
@@ -60,7 +63,7 @@ void deleteNode(Node** root, int key) {
     if (z->left == NULL || z->right == NULL) {
         y = z;
     } else {
-        y = minValueNode(z->right);  // Находим преемника
+        y = minValueNode(z->right);
     }
 
     if (y->left != NULL) {
@@ -93,4 +96,57 @@ void deleteTree(Node* node) {
     deleteTree(node->left);
     deleteTree(node->right);
     free(node);
+}
+
+int main() {
+    const int numInsertions = 10000;
+    const int numDeletions = 500;
+
+    FILE* file = fopen("../array/tetsA.txt", "r");
+    if (file == NULL) {
+        printf("ошинбос\n");
+        return 1;
+    }
+
+    int* arr = (int*)malloc(numInsertions * sizeof(int));
+
+    for (int i = 0; i < numInsertions; i++) {
+        int res = fscanf(file, "%d", &arr[i]);
+        if (res != 1) {
+            printf("не считалось\n");
+            return 1;
+        }
+    }
+    fclose(file);
+
+    clock_t start, end;
+    double cpu_time_used_insert = 0, cpu_time_used_delete = 0;
+
+    Node* root = NULL;
+    for (size_t k = 0; k < 1; k++) {
+    root = NULL;
+        start = clock();
+        for (int i = 0; i < numInsertions; i++) {
+            // printf("%d ", i);
+            insert(&root, arr[i]);
+        }
+        end = clock();
+        cpu_time_used_insert += ((double)(end - start)) / CLOCKS_PER_SEC;
+
+        start = clock();
+        for (int i = 0; i < numDeletions; i++) {
+            deleteNode(&root, arr[i]);
+        }
+        end = clock();
+        cpu_time_used_delete += ((double)(end - start)) / CLOCKS_PER_SEC;
+
+        deleteTree(root);
+    }
+
+    printf("Время выполнения вставки: %f секунд\n", cpu_time_used_insert / 1);
+    printf("Время выполнения удаления: %f секунд\n", cpu_time_used_delete / 1);
+
+    free(arr);
+
+    return 0;
 }

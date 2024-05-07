@@ -5,14 +5,14 @@ typedef struct Node {
     int key;
     struct Node* left;
     struct Node* right;
+    struct Node* parent;
 } Node;
 
 // NST - NAIVE SEARCH TREE
 
-Node* createNode(int key) ;
-Node* insert(Node* root, int key);
-Node* search(Node* root, int key);
-Node* deleteNode(Node* root, int key);
-void deleteTree(Node* root);
+void insert(Node** root, int key);
+void deleteNode(Node** root, int key);
+void deleteTree(Node* node);
+Node* newNode(int key);
 
 #endif

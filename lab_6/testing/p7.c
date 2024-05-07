@@ -16,7 +16,6 @@ void testing_insert(int* arr, int n, struct SkipList* skipList) {
 
 void testing_delete(int* arr, int n, struct SkipList* skipList) {
     for (size_t i = 0; i < n / 2; i++) {
-        // printf("%zu %d\n", i, arr[i]);
         erase(skipList, arr[i]);
     }
 }
