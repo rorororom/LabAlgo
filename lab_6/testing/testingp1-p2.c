@@ -16,8 +16,8 @@
 #endif
 
 int main() {
-    const int numInsertions = 1000000;
-    const int numDeletions = 500000;
+    const int numInsertions = MAX_TEST;
+    const int numDeletions = MAX_TEST / 2;
 
     int* arr = (int*)malloc(numInsertions * sizeof(int));
     assert(arr);
