@@ -10,8 +10,8 @@ typedef struct Node {
 
 // NST - NAIVE SEARCH TREE
 
-void insert(Node** root, int key);
-void deleteNode(Node** root, int key);
+void insert(Node* root, int key);
+void deleteNode(Node* root, int key);
 void deleteTree(Node* node);
 Node* newNode(int key);
 

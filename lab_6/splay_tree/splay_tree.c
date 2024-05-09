@@ -3,55 +3,54 @@
 #include<string.h>
 #include <assert.h>
 
-struct node {
-    int key;
-    struct node* left;
-    struct node* right;
-};
+#include "splay_tree.h"
 
-void* calloc_with_check(size_t num, size_t size) {
+static void* calloc_with_check(size_t num, size_t size) {
     void* ptr = calloc(num, size);
     assert(ptr != NULL);
     return ptr;
 }
 
-struct node* NewNode(int key) {
+static struct node* NewNode(int key) {
     struct node* new_node = (struct node*)calloc_with_check(1, sizeof(struct node));
     new_node->left = new_node->right = NULL;
     new_node->key = key;
     return new_node;
 }
 
-struct node* RightRotate(struct node *n) {
-    assert(n);
-    struct node *nn = n->left;
-    n->left = nn->right;
-    nn->right = n;
-    return nn;
+static struct node* RightRotate(struct node* node) {
+    assert(node);
+    struct node* newRoot = node->left;
+
+    node->left = newRoot->right;
+    newRoot->right = node;
+
+    return newRoot;
 }
 
-struct node* LeftRotate(struct node *n) {
-    assert(n);
-    struct node *nn = n->right;
-    n->right = nn->left;
-    nn->left = n;
-    return nn;
+static struct node* LeftRotate(struct node* node) {
+    assert(node);
+    struct node* newRoot = node->right;
+
+    node->right = newRoot->left;
+    newRoot->left = node;
+
+    return newRoot;
 }
 
-struct node* Splay(struct node* root, int key) {
+static struct node* Splay(struct node* root, int key) {
     if (root == NULL || root->key == key)
         return root;
 
-    struct node* header = NewNode(key);
+    static struct node* header = NULL;
+    if (header == NULL)
+        header = NewNode(key);
     struct node* leftMax = header;
     struct node* rightMin = header;
     struct node* leftTail = header;
     struct node* rightTail = header;
 
-    while (1) {
-        if (root->key == key)
-            break;
-
+    while (root->key != key) {
         if (root->key > key) {
             if (root->left == NULL)
                 break;
@@ -90,15 +89,14 @@ struct node* Splay(struct node* root, int key) {
     return root;
 }
 
-
-struct node* InsertRight(struct node* root, struct node* newNode) {
+static struct node* InsertRight(struct node* root, struct node* newNode) {
     newNode->right = root;
     newNode->left = root->left;
     root->left = NULL;
     return newNode;
 }
 
-struct node* InsertLeft(struct node* root, struct node* newNode) {
+static struct node* InsertLeft(struct node* root, struct node* newNode) {
     newNode->left = root;
     newNode->right = root->right;
     root->right = NULL;
@@ -158,7 +156,7 @@ struct node* Delete(struct node* root, int key) {
 }
 
 
-void Search(struct node** root, int key) {
+static void Search(struct node** root, int key) {
     assert(root);
 
     if (*root == NULL)
@@ -182,56 +180,4 @@ void Free(struct node* root) {
         free(temp);
     }
 }
-void GenerateGraphImage();
-void GenerateImage(struct node* heap);
-static void PrintNodeDump(FILE* dotFile, struct node* root, const char* fillColor);
-const int MAX_LEN = 256;
 
-void GenerateGraphImage()
-{
-    char command[MAX_LEN] = "";
-    sprintf(command, "dot -Tpng /Users/aleksandr/Desktop/TIM3/LabAlgo/lab_6/testing/treap.dot -o /Users/aleksandr/Desktop/TIM3/LabAlgo/lab_6/testing/file.png");
-    system(command);
-}
-void PrintTree(FILE* dotFile, struct node* root);
-
-void GenerateImage(struct node* root)
-{
-    FILE* dotFile = fopen("treap.dot", "w");
-
-    if (dotFile)
-    {
-        fprintf(dotFile, "digraph treap {\n");
-        fprintf(dotFile, "\tnode [shape=circle, style=filled, color=\"#4169e1\", fillcolor=\"#afeeee\", fontsize=12];\n");
-
-        PrintTree(dotFile, root);
-
-        fprintf(dotFile, "}\n");
-        fclose(dotFile);
-    }
-    else
-    {
-        fprintf(stderr, "Ошибка при открытии файла treap.dot\n");
-    }
-}
-
-
-void PrintTree(FILE* dotFile, struct node* root)
-{
-    if (root)
-    {
-        fprintf(dotFile, "\t%d[label=\"%d \"];\n", root->key, root->key);
-
-        if (root->left)
-        {
-            fprintf(dotFile, "\t%d -> %d [color=\"#228b22\"];\n", root->key, root->left->key);
-            PrintTree(dotFile, root->left);
-        }
-
-        if (root->right)
-        {
-            fprintf(dotFile, "\t%d -> %d [color=\"#8b0000\"];\n", root->key, root->right->key);
-            PrintTree(dotFile, root->right);
-        }
-    }
-}

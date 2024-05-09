@@ -7,13 +7,13 @@
 
 #define DEKARTOVO_TREE
 
-#include "../dekartovo_tree/dekartovo_tree.h"
+#include "../cartesian_tree/cartesian_tree.h"
 
 void testing_insert(int* arr, int n, pnode root) {
     for (size_t i = 0; i < n; i++) {
         pnode newnode = createNode(arr[i]);
         if (newnode != NULL) {
-            insert(&root, newnode);
+            insert(root, newnode);
         }
     }
 }
@@ -21,7 +21,7 @@ void testing_insert(int* arr, int n, pnode root) {
 void testing_delete(int* arr, int n, pnode root) {
     for (size_t i = 0; i < n / 2; i++) {
        if (exists(root, arr[i])) {
-            erase(&root, arr[i]);
+            erase(root, arr[i]);
         }
     }
 }

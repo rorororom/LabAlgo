@@ -8,7 +8,7 @@
 
 #include "skip_list.h"
 
-Node *createNode(int level, int key) {
+static Node *createNode(int level, int key) {
     assert(level >= 0);
 
     Node *newNode    = (Node *)malloc(sizeof(Node));
@@ -32,7 +32,7 @@ SkipList *createSkipList() {
     return skipList;
 }
 
-int randomLevel() {
+static int randomLevel() {
     int level = 0;
     while (rand() < RAND_MAX / 2 && level < MAX_LEVEL) {
         level++;
@@ -44,7 +44,7 @@ int randomLevel() {
 void insert(SkipList *skipList, int key) {
     assert(skipList);
 
-    Node *update[MAX_LEVEL + 1];
+    static Node *update[MAX_LEVEL + 1];
     Node *current = skipList->header;
 
     for (int i = skipList->level; i >= 0; i--) {
@@ -81,7 +81,7 @@ void insert(SkipList *skipList, int key) {
 void erase(SkipList *skipList, int key) {
     assert(skipList);
 
-    Node *update[MAX_LEVEL + 1];
+    static Node *update[MAX_LEVEL + 1];
     Node *current = skipList->header;
 
     for (int i = skipList->level; i >= 0; i--) {
@@ -109,7 +109,7 @@ void erase(SkipList *skipList, int key) {
     }
 }
 
-Node *search(SkipList *skipList, int key) {
+static Node *search(SkipList *skipList, int key) {
     assert(skipList);
 
     Node *current = skipList->header;

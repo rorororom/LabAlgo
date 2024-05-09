@@ -1,40 +1,45 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
+#include <assert.h>
 
 #include "naive_tree.h"
 
 Node* newNode(int key) {
     Node* node = (Node*)malloc(sizeof(Node));
+    assert(node);
+
     node->key = key;
     node->left = node->right = node->parent = NULL;
     return node;
 }
 
-void insert(Node** root, int key) {
-    Node* z = newNode(key);
-    Node* y = NULL;
-    Node* x = *root;
+void insert(Node* root, int key) {
+    assert(root);
 
-    while (x != NULL) {
-        y = x;
-        if (key < x->key)
-            x = x->left;
+    Node* new_node = newNode(key);
+    Node* parent = NULL;
+    Node* current = root;
+
+    while (current != NULL) {
+        parent = current;
+        if (key < current->key)
+            current = current->left;
         else
-            x = x->right;
+            current = current->right;
     }
 
-    z->parent = y;
-    if (y == NULL) {
-        *root = z;  
-    } else if (key < y->key) {
-        y->left = z;
+    new_node->parent = parent;
+    if (parent == NULL) {
+        root = new_node;
+    } else if (key < parent->key) {
+        parent->left = new_node;
     } else {
-        y->right = z;
+        parent->right = new_node;
     }
 }
 
-Node* findNode(Node* root, int key) {
+static Node* findNode(Node* root, int key) {
     while (root != NULL && key != root->key) {
         if (key < root->key)
             root = root->left;
@@ -44,53 +49,61 @@ Node* findNode(Node* root, int key) {
     return root;
 }
 
-Node* minValueNode(Node* node) {
+static Node* minValueNode(Node* node) {
     while (node && node->left != NULL)
         node = node->left;
     return node;
 }
 
-void deleteNode(Node** root, int key) {
-    Node* z = findNode(*root, key);
+void deleteNode(Node* root, int key) {
+    Node* node_to_delete = findNode(root, key);
 
-    if (z == NULL) return;
+    if (node_to_delete == NULL) return;
 
-    Node* y = NULL;
-    Node* x = NULL;
-    if (z->left == NULL || z->right == NULL) {
-        y = z;
+    Node* successor = NULL;
+    Node* replacement = NULL;
+    if (node_to_delete->left == NULL || node_to_delete->right == NULL) {
+        successor = node_to_delete;
     } else {
-        y = minValueNode(z->right);
+        successor = minValueNode(node_to_delete->right);
     }
 
-    if (y->left != NULL) {
-        x = y->left;
+    if (successor->left != NULL) {
+        replacement = successor->left;
     } else {
-        x = y->right;
+        replacement = successor->right;
     }
 
-    if (x != NULL) {
-        x->parent = y->parent;
+    if (replacement != NULL) {
+        replacement->parent = successor->parent;
     }
 
-    if (y->parent == NULL) {
-        *root = x;
-    } else if (y == y->parent->left) {
-        y->parent->left = x;
+    if (successor->parent == NULL) {
+        root = replacement;
+    } else if (successor == successor->parent->left) {
+        successor->parent->left = replacement;
     } else {
-        y->parent->right = x;
+        successor->parent->right = replacement;
     }
 
-    if (y != z) {
-        z->key = y->key;
+    if (successor != node_to_delete) {
+        node_to_delete->key = successor->key;
     }
 
-    free(y);
+    free(successor);
 }
 
 void deleteTree(Node* node) {
-    if (node == NULL) return;
-    deleteTree(node->left);
-    deleteTree(node->right);
-    free(node);
+    while (node != NULL) {
+        if (node->left != NULL) {
+            struct Node* temp = node->left;
+            node->left = temp->right;
+            temp->right = node;
+            node = temp;
+        } else {
+            struct Node* temp = node->right;
+            free(node);
+            node = temp;
+        }
+    }
 }

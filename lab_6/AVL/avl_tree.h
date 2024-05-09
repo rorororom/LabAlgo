@@ -8,6 +8,8 @@ typedef struct node {
     int height;
 } node;
 
+const int VAL_NULL = -1;
+
 node* Insert(node* node, int value);
 node* RemoveTree(node* root, int value);
 void DeleteTree(node* root);

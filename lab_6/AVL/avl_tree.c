@@ -1,87 +1,88 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include "avl_tree.h"
 
 #define MODULE 1000000000
 
-int max(int a, int b) {
+static int max(int a, int b) {
     if (a > b)
         return a;
 
     return b;
 }
 
-int height(node* n) {
+static int height(node* n) {
     if (n == NULL)
-        return -1;
+        return VAL_NULL;
 
     return n->height;
 }
 
-node* newNode(int value) {
-    node* n = (node*)malloc(sizeof(node));
-    n->value = value;
-    n->left = NULL;
-    n->right = NULL;
-    n->height = 0;
-    return n;
+static node* newNode(int value) {
+    node* newNode = (node*)malloc(sizeof(node));
+    assert(newNode);
+
+    newNode->value = value;
+    newNode->left = NULL;
+    newNode->right = NULL;
+    newNode->height = 0;
+    return newNode;
 }
 
-void redoneHeight(node* n) {
-    if (n == NULL)
+static void redoneHeight(node* node) {
+    if (node == NULL)
         return;
 
-    n->height = 1 + max(height(n->left), height(n->right));
+    node->height = 1 + max(height(node->left), height(node->right));
 }
 
-node* smallRotateRight(node* n) {
-    node* nn = n->right;
-    n->right = nn->left;
-    nn->left = n;
+static node* smallRotateLeft(node* root) {
+    node* newRoot = root->right;
+    root->right = newRoot->left;
+    newRoot->left = root;
 
-    redoneHeight(n);
-    redoneHeight(nn);
+    redoneHeight(root);
+    redoneHeight(newRoot);
 
-    return nn;
+    return newRoot;
 }
 
-node* smallRotateLeft(node* n) {
-    node* nn = n->left;
-    n->left = nn->right;
-    nn->right = n;
+static node* smallRotateRight(node* root) {
+    node* newRoot = root->left;
+    root->left = newRoot->right;
+    newRoot->right = root;
 
-    redoneHeight(n);
-    redoneHeight(nn);
+    redoneHeight(root);
+    redoneHeight(newRoot);
 
-    return nn;
+    return newRoot;
 }
 
-int getBalance(node* n) {
-    if (n == NULL)
+static int getBalance(node* node) {
+    if (node == NULL)
         return 0;
-    return height(n->left) - height(n->right);
+    return height(node->left) - height(node->right);
 }
 
-node* BalanceTree(node* node) {
+static node* BalanceTree(node* node) {
     int balance = getBalance(node);
+
+    redoneHeight(node);
 
     if (balance == 2) {
         if (getBalance(node->left) < 0) {
-            node->left = smallRotateRight(node->left);
-            return smallRotateLeft(node);
-        } else {
-            return smallRotateLeft(node);
+            node->left = smallRotateLeft(node->left);
         }
+        return smallRotateRight(node);
     }
 
     if (balance == -2) {
         if (getBalance(node->right) > 0) {
-            node->right = smallRotateLeft(node->right);
-            return smallRotateRight(node);
-        } else {
-            return smallRotateRight(node);
+            node->right = smallRotateRight(node->right);
         }
+        return smallRotateLeft(node);
     }
 
     return node;
@@ -96,68 +97,46 @@ node* Insert(node* node, int value) {
     else
         node->right = Insert(node->right, value);
 
-    node->height = 1 + max(height(node->left), height(node->right));
-
-    int balance = getBalance(node);
-
     return BalanceTree(node);
 }
 
-
-
-int nextvalue(node* root, int value) {
-    int result = -1;
-
-    if (root == NULL)
-        return result;
-
-    if (root->value == value) {
-        return root->value;
-    } else if (value < root->value) {
-        int flag = nextvalue(root->left, value);
-        if (flag != -1) {
-            return flag;
-        } else {
-            return root->value;
-        }
-    } else {
-        return nextvalue(root->right, value);
-    }
-}
-
-node* FindMinTree(node* root) {
+static node* FindMinTree(node* root) {
 	return root->left ? FindMinTree(root->left) : root;
 }
 
-node* RemoveMinTree(node* root)  {
-	if(root->left == 0)
+static node* RemoveMinTree(node* root)  {
+	if (root->left == NULL)
 		return root->right;
+
 	root->left = RemoveMinTree(root->left);
+
 	return BalanceTree(root);
 }
 
 node* RemoveTree(node* root, int value) {
-    if(!root)
+    if (!root) {
         return NULL;
-	if(value < root->value ) {
-		root->left = RemoveTree(root->left, value);
+    }
 
-    } else if(value > root->value) {
-		root->right = RemoveTree(root->right, value);
+    if (value < root->value) {
+        root->left = RemoveTree(root->left, value);
+    } else if (value > root->value) {
+        root->right = RemoveTree(root->right, value);
     } else {
-		node* q = root->left;
-		node* r = root->right;
-	    root = NULL;
+        node* leftSubtree = root->left;
+        node* rightSubtree = root->right;
+        free(root);
 
-		if(!r)
-            return q;
-		node* min = FindMinTree(r);
+        if (!rightSubtree) {
+            return leftSubtree;
+        }
 
-		min->right = RemoveMinTree(r);
-		min->left = q;
+        node* minRight = FindMinTree(rightSubtree);
+        minRight->right = RemoveMinTree(rightSubtree);
+        minRight->left = leftSubtree;
 
-        return BalanceTree(min);
-	}
+        return BalanceTree(minRight);
+    }
 
     return BalanceTree(root);
 }
