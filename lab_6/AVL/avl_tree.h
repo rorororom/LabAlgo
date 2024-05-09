@@ -8,7 +8,7 @@ typedef struct node {
     int height;
 } node;
 
-const int VAL_NULL = -1;
+const int NULL_HEIGHT = -1; // отсутствие высоты у узла
 
 node* Insert(node* node, int value);
 node* RemoveTree(node* root, int value);

@@ -13,11 +13,11 @@ static int max(int a, int b) {
     return b;
 }
 
-static int height(node* n) {
-    if (n == NULL)
-        return VAL_NULL;
+static int height(node* node) {
+    if (node == NULL)
+        return NULL_HEIGHT;
 
-    return n->height;
+    return node->height;
 }
 
 static node* newNode(int value) {
