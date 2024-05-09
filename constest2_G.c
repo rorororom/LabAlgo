@@ -7,8 +7,8 @@ typedef struct node {
     int key;
     int prior;
     int size;
-    struct node* l;
-    struct node* r;
+    struct node* left;
+    struct node* right;
 } node;
 
 typedef struct node* Node;
@@ -34,9 +34,9 @@ int GoodRand() {
  * @param t Указатель на корень поддерева, для которого обновляется размер.
  * @return void
  */
-void UpdateSize(Node t) {
-    if (t) {
-        t->size = 1 + (t->l ? t->l->size : 0) + (t->r ? t->r->size : 0);
+void UpdateSize(Node node) {
+    if (node) {
+        node->size = 1 + (node->left ? node->left->size : 0) + (node->right ? node->right->size : 0);
     }
 }
 
@@ -49,18 +49,18 @@ void UpdateSize(Node t) {
  * @param r Указатель на корень правого поддерева.
  * @return void
  */
-void Split(Node t, int key, Node *l, Node *r) {
-    if (!t) {
-        *l = NULL;
-        *r = NULL;
+void Split(Node node, int key, Node *left, Node *right) {
+    if (!node) {
+        *left = NULL;
+        *right = NULL;
     }
 
-    else if (key < t->key)
-        Split(t->l, key, l, &t->l), *r = t;
+    else if (key < node->key)
+        Split(node->left, key, left, &node->left), *right = node;
     else
-        Split(t->r, key, &t->r, r), *l = t;
+        Split(node->right, key, &node->right, right), *left = node;
 
-    UpdateSize(t);
+    UpdateSize(node);
 }
 
 /**
@@ -70,16 +70,16 @@ void Split(Node t, int key, Node *l, Node *r) {
  * @param it Указатель на новый узел для вставки.
  * @return void
  */
-void Insert(Node *t, Node it) {
-    if (!*t)
-        *t = it;
+void Insert(Node* node, Node newNode) {
+    if (!*node)
+        *node = newNode;
 
-    else if (it->prior > (*t)->prior)
-        Split(*t, it->key, &it->l, &it->r), *t = it;
+    else if (newNode->prior > (*node)->prior)
+        Split(*node, newNode->key, &newNode->left, &newNode->right), *node = newNode;
     else
-        Insert(it->key < (*t)->key ? &(*t)->l : &(*t)->r, it);
+        Insert(newNode->key < (*node)->key ? &(*node)->left : &(*node)->right, newNode);
 
-    UpdateSize(*t);
+    UpdateSize(*node);
 }
 
 /**
@@ -90,18 +90,18 @@ void Insert(Node *t, Node it) {
  * @param r Указатель на корень правого дерева.
  * @return void
  */
-void Merge(Node *t, Node l, Node r) {
-    if (!l || !r) {
-        *t = l ? l : r;
-    } else if (l->prior > r->prior) {
-        Merge(&l->r, l->r, r);
-        *t = l;
+void Merge(Node *node, Node left, Node right) {
+    if (!left || !right) {
+        *node = left ? left : right;
+    } else if (left->prior > right->prior) {
+        Merge(&left->right, left->right, right);
+        *node = left;
     } else {
-        Merge(&r->l, l, r->l);
-        *t = r;
+        Merge(&right->left, left, right->left);
+        *node = right;
     }
 
-    UpdateSize(*t);
+    UpdateSize(*node);
 }
 
 /**
@@ -111,19 +111,19 @@ void Merge(Node *t, Node l, Node r) {
  * @param key Ключ узла для удаления.
  * @return void
  */
-void Erase(Node *t, int key) {
-    if (!*t)
+void Erase(Node *node, int key) {
+    if (!*node)
         return;
 
-    if ((*t)->key == key) {
-        Node temp = *t;
-        Merge(t, (*t)->l, (*t)->r);
+    if ((*node)->key == key) {
+        Node temp = *node;
+        Merge(node, (*node)->left, (*node)->right);
         free(temp);
     } else {
-        Erase(key < (*t)->key ? &(*t)->l : &(*t)->r, key);
+        Erase(key < (*node)->key ? &(*node)->left : &(*node)->right, key);
     }
 
-    UpdateSize(*t);
+    UpdateSize(*node);
 }
 
 /**
@@ -133,22 +133,22 @@ void Erase(Node *t, int key) {
  * @param r Указатель на корень правого дерева.
  * @return Указатель на корень результирующего дерева.
  */
-Node Unite(Node l, Node r) {
-    if (!l || !r)
-        return l ? l : r;
-    if (l->prior < r->prior) {
-        Node temp = l;
-        l = r;
-        r = temp;
+Node Unite(Node left, Node right) {
+    if (!left || !right)
+        return left ? left : right;
+    if (left->prior < right->prior) {
+        Node temp = left;
+        left = right;
+        right = temp;
     }
 
     Node lt, rt;
-    Split(r, l->key, &lt, &rt);
-    l->l = Unite(l->l, lt);
-    l->r = Unite(l->r, rt);
+    Split(right, left->key, &lt, &rt);
+    left->left = Unite(left->left, lt);
+    left->right = Unite(left->right, rt);
 
-    UpdateSize(l);
-    return l;
+    UpdateSize(left);
+    return left;
 }
 
 /**
@@ -158,15 +158,15 @@ Node Unite(Node l, Node r) {
  * @param key Ключ узла для поиска.
  * @return true, если узел найден, иначе false.
  */
-bool Exists(Node t, int key) {
-    if (!t)
+bool Exists(Node node, int key) {
+    if (!node)
         return false;
-    if (key == t->key)
+    if (key == node->key)
         return true;
-    else if (key < t->key)
-        return Exists(t->l, key);
+    else if (key < node->key)
+        return Exists(node->left, key);
     else
-        return Exists(t->r, key);
+        return Exists(node->right, key);
 }
 
 /**
@@ -176,14 +176,14 @@ bool Exists(Node t, int key) {
  * @param key Ключ, относительно которого производится поиск.
  * @return Значение ключа найденного узла или -1, если узел не найден.
  */
-int Next(Node t, int key) {
-    if (!t)
+int Next(Node node, int key) {
+    if (!node)
         return -1;
-    if (key < t->key) {
-        int result = Next(t->l, key);
-        return result == -1 ? t->key : result;
+    if (key < node->key) {
+        int result = Next(node->left, key);
+        return result == -1 ? node->key : result;
     } else
-        return Next(t->r, key);
+        return Next(node->right, key);
 }
 
 /**
@@ -193,14 +193,14 @@ int Next(Node t, int key) {
  * @param key Ключ, относительно которого производится поиск.
  * @return Значение ключа найденного узла или -1, если узел не найден.
  */
-int Prev(Node t, int key) {
-    if (!t)
+int Prev(Node node, int key) {
+    if (!node)
         return -1;
-    if (key > t->key) {
-        int result = Prev(t->r, key);
-        return result == -1 ? t->key : result;
+    if (key > node->key) {
+        int result = Prev(node->right, key);
+        return result == -1 ? node->key : result;
     } else
-        return Prev(t->l, key);
+        return Prev(node->left, key);
 }
 
 /**
@@ -213,13 +213,13 @@ int Prev(Node t, int key) {
 Node Kth(Node root, int k) {
     if (!root)
         return NULL;
-    int leftSize = root->l ? root->l->size : 0;
+    int leftSize = root->left ? root->left->size : 0;
     if (k == leftSize)
         return root;
     else if (k < leftSize)
-        return Kth(root->l, k);
+        return Kth(root->left, k);
     else
-        return Kth(root->r, k - leftSize - 1);
+        return Kth(root->right, k - leftSize - 1);
 }
 
 /**
@@ -235,7 +235,7 @@ void InsertIfNotExists(Node *root, int key) {
         newItem->key = key;
         newItem->prior = GoodRand();
         newItem->size = 1;
-        newItem->l = newItem->r = NULL;
+        newItem->left = newItem->right = NULL;
         Insert(root, newItem);
     }
 }
