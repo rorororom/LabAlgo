@@ -20,15 +20,6 @@ typedef struct node* Node;
         }
 
 /**
- * @brief Генерация псевдослучайного числа.
- *
- * @return Сгенерированное случайное число.
- */
-int GoodRand() {
-    return rand() % 1000000007;
-}
-
-/**
  * @brief Обновление размера поддерева с корнем в узле.
  *
  * @param t Указатель на корень поддерева, для которого обновляется размер.
@@ -49,81 +40,71 @@ void UpdateSize(Node node) {
  * @param r Указатель на корень правого поддерева.
  * @return void
  */
-void Split(Node node, int key, Node *left, Node *right) {
-    if (!node) {
-        *left = NULL;
-        *right = NULL;
-    }
-
+void Split(Node node, int key, Node left, Node right) {
+    if (!node)
+        left = right = NULL;
     else if (key < node->key)
-        Split(node->left, key, left, &node->left), *right = node;
+        Split(node->left, key, left, node->left), right = node;
     else
-        Split(node->right, key, &node->right, right), *left = node;
-
+        Split(node->right, key, node->right, right), left = node;
     UpdateSize(node);
 }
 
 /**
  * @brief Вставка узла в дерево.
  *
- * @param t Указатель на указатель корня дерева.
+ * @param t Указатель на корня дерева.
  * @param it Указатель на новый узел для вставки.
  * @return void
  */
-void Insert(Node* node, Node newNode) {
-    if (!*node)
-        *node = newNode;
-
-    else if (newNode->prior > (*node)->prior)
-        Split(*node, newNode->key, &newNode->left, &newNode->right), *node = newNode;
+void Insert(Node node, Node newNode) {
+    if (!node)
+        node = newNode;
+    else if (newNode->prior > node->prior)
+        Split(node, newNode->key, newNode->left, newNode->right), node = newNode;
     else
-        Insert(newNode->key < (*node)->key ? &(*node)->left : &(*node)->right, newNode);
+        Insert(newNode->key < node->key ? node->left : node->right, newNode);
 
-    UpdateSize(*node);
+    UpdateSize(node);
 }
 
 /**
  * @brief Объединение двух деревьев.
  *
- * @param t Указатель на указатель корня результирующего дерева.
+ * @param t Указатель на корень результирующего дерева.
  * @param l Указатель на корень левого дерева.
  * @param r Указатель на корень правого дерева.
  * @return void
  */
-void Merge(Node *node, Node left, Node right) {
-    if (!left || !right) {
-        *node = left ? left : right;
-    } else if (left->prior > right->prior) {
-        Merge(&left->right, left->right, right);
-        *node = left;
-    } else {
-        Merge(&right->left, left, right->left);
-        *node = right;
-    }
-
-    UpdateSize(*node);
+void Merge(Node node, Node left, Node right) {
+    if (!left || !right)
+        node = left ? left : right;
+    else if (left->prior > right->prior)
+        Merge(left->right, left->right, right), node = left;
+    else
+        Merge(right->left, left, right->left), node = right;
+    UpdateSize(node);
 }
 
 /**
  * @brief Удаление узла с заданным ключом из дерева.
  *
- * @param t Указатель на указатель корня дерева.
+ * @param t Указатель на корень дерева.
  * @param key Ключ узла для удаления.
  * @return void
  */
-void Erase(Node *node, int key) {
-    if (!*node)
+void Erase(Node node, int key) {
+    if (!node)
         return;
-
-    if ((*node)->key == key) {
-        Node temp = *node;
-        Merge(node, (*node)->left, (*node)->right);
+    if (node->key == key) {
+        Node temp = node;
+        Merge(node, node->left, node->right);
         free(temp);
     } else {
-        Erase(key < (*node)->key ? &(*node)->left : &(*node)->right, key);
+        Erase(key < node->key ? node->left : node->right, key);
     }
 
-    UpdateSize(*node);
+    UpdateSize(node);
 }
 
 /**
@@ -143,7 +124,7 @@ Node Unite(Node left, Node right) {
     }
 
     Node lt, rt;
-    Split(right, left->key, &lt, &rt);
+    Split(right, left->key, lt, rt);
     left->left = Unite(left->left, lt);
     left->right = Unite(left->right, rt);
 
@@ -229,11 +210,11 @@ Node Kth(Node root, int k) {
  * @param key Ключ нового узла для вставки.
  * @return void
  */
-void InsertIfNotExists(Node *root, int key) {
-    if (!Exists(*root, key)) {
+void InsertIfNotExists(Node root, int key) {
+    if (!Exists(root, key)) {
         Node newItem = (Node)malloc(sizeof(struct node));
         newItem->key = key;
-        newItem->prior = GoodRand();
+        newItem->prior = rand();
         newItem->size = 1;
         newItem->left = newItem->right = NULL;
         Insert(root, newItem);
@@ -246,19 +227,19 @@ int main() {
     FILE* input = stdin;
     FILE* output = stdout;
 
-    char operation[10];
+    char operation[11];
     int x;
 
-    while (fscanf(input, "%s", operation) > 0) {
+    while (fscanf(input, "%10s", operation) > 0) {
         int res = fscanf(input, "%d", &x);
         CHECK_READ(res);
 
         if (strcmp(operation, "insert") == 0) {
-            InsertIfNotExists(&root, x);
+            InsertIfNotExists(root, x);
 
         } else if (strcmp(operation, "delete") == 0) {
             if (Exists(root, x)) {
-                Erase(&root, x);
+                Erase(root, x);
             }
         } else if (strcmp(operation, "exists") == 0) {
             fprintf(output, "%s\n", Exists(root, x) ? "true" : "false");
